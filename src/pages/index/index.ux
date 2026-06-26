@@ -1,48 +1,251 @@
 <template>
-  <div class="demo-page">
-    <text class="title">{{ $t("a.b") }},欢迎打开{{ title }}</text>
-    <!-- 点击跳转详情页 -->
-    <input class="btn" type="button" value="跳转到详情页" onclick="routeDetail" />
+  <div class="page-container">
+    <div if="{{!inited}}" class="loading-wrap">
+      <text class="loading-text">加载中...</text>
+    </div>
+    <div elif="{{lessons.length === 0}}" class="empty-wrap">
+      <text class="empty-text">今日无课</text>
+    </div>
+    <div else class="schedule-wrap">
+      <div class="top-section">
+        <text class="time-display">{{ currentTime }}</text>
+        <text class="date-display">{{ dateLabel }}</text>
+      </div>
+      <div class="countdown-bar">
+        <text class="countdown-text">{{ countdownText }}</text>
+      </div>
+      <scroll scroll-y="true" class="lesson-scroll">
+        <block for="{{lessons}}" tid="name">
+          <div if="{{$item.isDivider}}" class="divider-line"></div>
+          <div else class="lesson-item {{$item.active === 2 ? 'lesson-active' : ($item.active === 1 ? 'lesson-upcoming' : 'lesson-inactive')}}">
+            <div class="lesson-content">
+              <text class="lesson-name">{{$item.name}}</text>
+              <text class="lesson-time">{{$item.time}}</text>
+            </div>
+            <text if="{{$item.active === 2}}" class="badge-now">上课</text>
+            <text elif="{{$item.active === 1}}" class="badge-next">下一节</text>
+          </div>
+        </block>
+      </scroll>
+      <div class="bottom-bar">
+        <text class="footer-text">{{ footerLabel }}</text>
+      </div>
+    </div>
   </div>
 </template>
 
-<script>
-import router from "@system.router"
-
-export default {
-  // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
-  private: {
-    title: "示例页面"
-  },
-
-  routeDetail() {
-    // 跳转到应用内的某个页面，router用法详见：文档->接口->页面路由
-    router.push({
-      uri: "/pages/detail"
-    })
-  }
-}
-</script>
-
 <style>
-.demo-page {
+.page-container {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+}
+
+.loading-wrap {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  flex-grow: 1;
 }
 
-.title {
-  font-size: 20px;
-  text-align: center;
+.loading-text {
+  font-size: 24px;
+  color: #888888;
 }
 
-.btn {
-  width: 200px;
-  height: 40px;
-  margin-top: 20px;
-  border-radius: 5px;
-  background-color: #09ba07;
-  font-size: 20px;
+.empty-wrap {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.empty-text {
+  font-size: 24px;
+  color: #666666;
+}
+
+.schedule-wrap {
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.top-section {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0 4px 0;
+}
+
+.time-display {
+  font-size: 36px;
   color: #ffffff;
+  font-weight: bold;
+}
+
+.date-display {
+  font-size: 22px;
+  color: #888888;
+  margin-top: 2px;
+}
+
+.countdown-bar {
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 16px;
+  margin: 4px 16px;
+  border-radius: 12px;
+  background-color: #1a1a1a;
+}
+
+.countdown-text {
+  font-size: 20px;
+  color: #cccccc;
+  text-align: center;
+  lines: 2;
+  text-overflow: ellipsis;
+}
+
+.lesson-scroll {
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.lesson-item {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  margin: 3px 16px;
+  border-radius: 10px;
+  background-color: #1a1a1a;
+}
+
+.lesson-active {
+  background-color: #1a3a1a;
+  border: 2px solid #4CAF50;
+}
+
+.lesson-upcoming {
+  background-color: #2a2a1a;
+  border: 2px solid #FF9800;
+}
+
+.lesson-inactive {
+  background-color: #1a1a1a;
+}
+
+.lesson-content {
+  flex-direction: column;
+}
+
+.lesson-name {
+  font-size: 22px;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.lesson-time {
+  font-size: 17px;
+  color: #888888;
+  margin-top: 2px;
+}
+
+.divider-line {
+  height: 2px;
+  margin: 6px 24px;
+  background-color: #333333;
+}
+
+.badge-now {
+  font-size: 16px;
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.badge-next {
+  font-size: 16px;
+  color: #FF9800;
+  font-weight: bold;
+}
+
+.bottom-bar {
+  flex-direction: row;
+  justify-content: center;
+  padding: 8px 0 12px 0;
+}
+
+.footer-text {
+  font-size: 18px;
+  color: #666666;
 }
 </style>
+
+<script>
+import { engine, init, startTimers, stopTimers, getScheduleToday, getLessonStatus, getCountdownText, onUpdate } from '../../common/scheduleEngine'
+
+export default {
+  private: {
+    inited: false,
+    lessons: [],
+    currentScheduleId: 0,
+    countdownText: '',
+    currentTime: '',
+    dateLabel: '',
+    footerLabel: '',
+    _unsubscribe: null,
+    _timer: null
+  },
+
+  onInit() {
+    this._unsubscribe = onUpdate(() => {
+      this.refreshDisplay()
+    })
+  },
+
+  onShow() {
+    if (!engine.inited) {
+      init()
+      this.inited = true
+      startTimers()
+    }
+    if (this._timer) clearInterval(this._timer)
+    this._timer = setInterval(() => {
+      this.refreshDisplay()
+    }, 1000)
+    this.refreshDisplay()
+  },
+
+  onHide() {
+    if (this._timer) {
+      clearInterval(this._timer)
+      this._timer = null
+    }
+  },
+
+  onDestroy() {
+    stopTimers()
+    if (this._timer) {
+      clearInterval(this._timer)
+      this._timer = null
+    }
+    if (this._unsubscribe) {
+      this._unsubscribe()
+      this._unsubscribe = null
+    }
+  },
+
+  refreshDisplay() {
+    this.lessons = getScheduleToday(engine.schedule, engine.currentScheduleId, engine.today, engine.scheduleOverride)
+    this.countdownText = getCountdownText(this.lessons, engine.setting.timeOffset)
+    this.currentScheduleId = engine.currentScheduleId
+    const now = new Date()
+    this.currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0')
+    this.dateLabel = (now.getMonth() + 1) + '/' + now.getDate()
+    const weekNames = ['日', '一', '二', '三', '四', '五', '六']
+    this.footerLabel = '第' + (engine.currentScheduleId + 1) + '周 周' + weekNames[now.getDay()]
+  }
+}
+</script>
