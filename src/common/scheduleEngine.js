@@ -1,26 +1,9 @@
 import defaultConfig from './config.json'
 
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-const WEEKDAY_MAP = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, sun: 7 }
 
 const DEFAULT_SETTING = {
-  startup: true,
-  zoom: 1,
-  heightFactor: 0.7,
-  avoidCoverTitleBar: true,
-  timeOffset: 0,
-  drawDynamicProbability: true,
-  drawPreventDuplicate: true,
-  drawAutoNewRound: true,
-  drawPreventCheating: true,
-  drawSmallWindowEnabled: true,
-  drawExcludeLeaveStudents: true,
-  themeColor: '#ce9e04',
-  password: '',
-  passwordScope: ['editor-password'],
-  AIapiKey: '',
-  AIplayVoiceWhenLessonSwitch: true,
-  widgetWordCardHistory: []
+  timeOffset: 0
 }
 
 function createEmptyDay() {
@@ -32,17 +15,14 @@ function createEmptySchedule() {
 }
 
 const engine = {
-  setting: { ...DEFAULT_SETTING, passwordScope: [...DEFAULT_SETTING.passwordScope], widgetWordCardHistory: [] },
-  drawCandidates: [],
+  setting: { ...DEFAULT_SETTING },
   inited: false,
-  initedTime: 0,
   today: '',
   patterns: [],
   schedule: [],
   firstWeekMonday: '',
   currentScheduleId: 0,
   scheduleOverride: { date: '1970-01-01', override: [] },
-  widgets: [],
 
   _todayTimer: null,
   _activeTimer: null,
@@ -118,13 +98,6 @@ function getScheduleToday(schedule, scheduleId, today, override) {
   return daySchedule[today].lessons
 }
 
-function getLessonStatus(lessons) {
-  for (let i = 0; i < lessons.length; i++) {
-    if ((lessons[i].active || 0) === 2) return true
-  }
-  return false
-}
-
 function getCountdownText(lessons, timeOffset) {
   const nowTime = getMinutesNow(timeOffset)
   const rex = /^(\d{1,2})[：:](\d{1,2})[-~ ]+(\d{1,2})[：:](\d{1,2})$/
@@ -182,73 +155,6 @@ function getCurrentScheduleId(firstWeekMonday, scheduleLength) {
   return ((diff % len) + len) % len
 }
 
-function setScheduleCount(count) {
-  while (engine.schedule.length > count) {
-    engine.schedule.pop()
-  }
-  while (engine.schedule.length < count) {
-    engine.schedule.push(createEmptySchedule())
-  }
-}
-
-function setPatternToDay(patternId, scheduleId, day) {
-  const targetSchedule = engine.schedule[scheduleId]
-  if (!targetSchedule) return
-  targetSchedule[day].pattern = patternId
-  const p = engine.patterns[patternId]
-  if (!p) return
-  const courseNames = targetSchedule[day].lessons.filter(l => !l.isDivider).map(l => l.name)
-  const lessons = []
-  let courseIdx = 0
-  for (let i = 0; i < p.data.length; i++) {
-    const name = (!p.data[i].isDivider) ? (courseNames[courseIdx] || '空') : '空'
-    if (!p.data[i].isDivider) courseIdx++
-    lessons.push({
-      name: name,
-      time: p.data[i].time || '',
-      isDivider: !!p.data[i].isDivider
-    })
-  }
-  targetSchedule[day].lessons = lessons
-}
-
-function refreshPatternToDay() {
-  for (let i = 0; i < engine.patterns.length; i++) {
-    for (let j = 0; j < engine.schedule.length; j++) {
-      for (const key of WEEKDAYS) {
-        if (engine.schedule[j][key].pattern === i) {
-          setPatternToDay(i, j, key)
-        }
-      }
-    }
-  }
-}
-
-function csesStringify(cses) {
-  let out = ''
-  out += 'version: ' + cses.version + '\n'
-  out += 'subjects:\n'
-  for (const s of cses.subjects) {
-    out += '  - name: "' + s.name + '"\n'
-    out += '    simplified_name: "' + s.simplified_name + '"\n'
-    out += '    room: "' + (s.room || '') + '"\n'
-    out += '    teacher: "' + (s.teacher || '') + '"\n'
-  }
-  out += 'schedules:\n'
-  for (const sch of cses.schedules) {
-    out += '  - name: "' + sch.name + '"\n'
-    out += '    enable_day: ' + sch.enable_day + '\n'
-    if (sch.weeks) out += '    weeks: ' + sch.weeks + '\n'
-    out += '    classes:\n'
-    for (const cls of sch.classes) {
-      out += '      - subject: "' + cls.subject + '"\n'
-      out += '        start_time: "' + cls.start_time + '"\n'
-      out += '        end_time: "' + cls.end_time + '"\n'
-    }
-  }
-  return out
-}
-
 function csesParse(str) {
   const lines = str.split('\n').filter(l => l.trim())
   const result = { version: 1, subjects: [], schedules: [] }
@@ -302,40 +208,6 @@ function csesParse(str) {
   return result
 }
 
-function exportToCSES() {
-  const cses = { version: 1, subjects: [], schedules: [] }
-  for (let i = 0; i < Math.min(engine.schedule.length, 2); i++) {
-    for (const key of WEEKDAYS) {
-      const daySchedule = engine.schedule[i][key]
-      const csesClasses = []
-      for (const lesson of daySchedule.lessons) {
-        if (!cses.subjects.find(item => item.name === lesson.name)) {
-          cses.subjects.push({ name: lesson.name, simplified_name: lesson.name.substring(0, 1), room: '', teacher: '' })
-        }
-        const reg = /^(\d{1,2})[：:](\d{1,2})[-~ ]+(\d{1,2})[：:](\d{1,2})$/
-        const time = reg.exec(lesson.time)
-        if (time && !lesson.isDivider) {
-          csesClasses.push({
-            subject: lesson.name,
-            start_time: time[1].padStart(2, '0') + ':' + time[2].padStart(2, '0') + ':00',
-            end_time: time[3].padStart(2, '0') + ':' + time[4].padStart(2, '0') + ':00'
-          })
-        }
-      }
-      const entry = {
-        name: '第' + (i + 1) + '周 周' + WEEKDAY_MAP[key],
-        enable_day: WEEKDAY_MAP[key],
-        classes: csesClasses
-      }
-      if (engine.schedule.length > 1) {
-        entry.weeks = i === 0 ? 'odd' : 'even'
-      }
-      cses.schedules.push(entry)
-    }
-  }
-  return csesStringify(cses)
-}
-
 function importFromCSES(csesStr) {
   try {
     const cses = csesParse(csesStr)
@@ -343,9 +215,12 @@ function importFromCSES(csesStr) {
       return { success: false, message: '不支持的配置版本' }
     }
     engine.patterns = []
-    setScheduleCount(0)
+    engine.schedule = []
     const hasEven = cses.schedules.some(item => item.weeks === 'even')
-    setScheduleCount(hasEven ? 2 : 1)
+    const targetCount = hasEven ? 2 : 1
+    while (engine.schedule.length < targetCount) {
+      engine.schedule.push(createEmptySchedule())
+    }
     for (const scheduleEntry of cses.schedules) {
       const dayIdx = scheduleEntry.enable_day - 1
       if (dayIdx < 0 || dayIdx > 6) continue
@@ -400,9 +275,7 @@ function init() {
       if (d.scheduleOverride && d.scheduleOverride.date === formatDate()) {
         engine.scheduleOverride = d.scheduleOverride
       }
-      if (d.widgets) engine.widgets = d.widgets
       if (d.firstWeekMonday) engine.firstWeekMonday = d.firstWeekMonday
-      if (d.drawCandidates) engine.drawCandidates = d.drawCandidates
       if (d.setting) {
         for (const key in d.setting) {
           if (key in engine.setting) {
@@ -419,13 +292,12 @@ function init() {
     }
   }
   if (engine.schedule.length === 0) {
-    setScheduleCount(1)
+    engine.schedule.push(createEmptySchedule())
   }
   engine.today = getToday()
   engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
   refreshActiveState()
   engine.inited = true
-  engine.initedTime = Date.now()
 }
 
 function save() {
@@ -474,21 +346,11 @@ export {
   engine,
   init,
   save,
-  setScheduleCount,
   setFirstWeek,
-  setPatternToDay,
-  refreshPatternToDay,
-  exportToCSES,
   importFromCSES,
-  getCurrentScheduleId,
-  isActiveTime,
-  refreshActiveState,
   getScheduleToday,
-  getLessonStatus,
   getCountdownText,
   startTimers,
   stopTimers,
-  onUpdate,
-  WEEKDAYS,
-  WEEKDAY_MAP
+  onUpdate
 }

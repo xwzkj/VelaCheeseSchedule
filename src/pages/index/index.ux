@@ -184,7 +184,7 @@
 </style>
 
 <script>
-import { engine, init, startTimers, stopTimers, getScheduleToday, getLessonStatus, getCountdownText, onUpdate } from '../../common/scheduleEngine'
+import { engine, init, startTimers, stopTimers, getScheduleToday, getCountdownText, onUpdate } from '../../common/scheduleEngine'
 
 export default {
   private: {
