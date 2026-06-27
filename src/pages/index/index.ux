@@ -15,7 +15,7 @@
         <text class="countdown-text">{{ countdownText }}</text>
       </div>
       <scroll scroll-y="true" class="lesson-scroll">
-        <block for="{{lessons}}" tid="name">
+        <block for="{{lessons}}" tid="id">
           <div if="{{$item.isDivider}}" class="divider-line"></div>
           <div
             else
@@ -218,7 +218,8 @@ export default {
     dateLabel: "",
     footerLabel: "",
     _unsubscribe: null,
-    _timer: null
+    _timer: null,
+    _lastScheduleKey: ""
   },
 
   onInit() {
@@ -260,12 +261,32 @@ export default {
   },
 
   refreshDisplay() {
-    this.lessons = getScheduleToday(
+    const scheduleKey = [engine.currentScheduleId, engine.today, engine.scheduleOverride.date].join(
+      "|"
+    )
+    const currentLessons = getScheduleToday(
       engine.schedule,
       engine.currentScheduleId,
       engine.today,
       engine.scheduleOverride
     )
+
+    if (this._lastScheduleKey !== scheduleKey) {
+      // 课表/日期/临时调课发生变化时才重建列表，避免滚动时整表重绘
+      this._lastScheduleKey = scheduleKey
+      this.lessons = currentLessons.map((lesson, index) => ({
+        ...lesson,
+        id: scheduleKey + ":" + index
+      }))
+    } else if (currentLessons.length === this.lessons.length) {
+      // 仅原地更新上课状态，保持列表引用稳定
+      for (let i = 0; i < this.lessons.length; i++) {
+        if (this.lessons[i].active !== currentLessons[i].active) {
+          this.lessons[i].active = currentLessons[i].active
+        }
+      }
+    }
+
     this.countdownText = getCountdownText(this.lessons, engine.setting.timeOffset)
     this.currentScheduleId = engine.currentScheduleId
     const now = new Date()
