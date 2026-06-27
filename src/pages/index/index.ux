@@ -17,10 +17,13 @@
       <scroll scroll-y="true" class="lesson-scroll">
         <block for="{{lessons}}" tid="name">
           <div if="{{$item.isDivider}}" class="divider-line"></div>
-          <div else class="lesson-item {{$item.active === 2 ? 'lesson-active' : ($item.active === 1 ? 'lesson-upcoming' : 'lesson-inactive')}}">
+          <div
+            else
+            class="lesson-item {{$item.active === 2 ? 'lesson-active' : ($item.active === 1 ? 'lesson-upcoming' : 'lesson-inactive')}}"
+          >
             <div class="lesson-content">
-              <text class="lesson-name">{{$item.name}}</text>
-              <text class="lesson-time">{{$item.time}}</text>
+              <text class="lesson-name">{{ $item.name }}</text>
+              <text class="lesson-time">{{ $item.time }}</text>
             </div>
             <text if="{{$item.active === 2}}" class="badge-now">上课</text>
             <text elif="{{$item.active === 1}}" class="badge-next">下一节</text>
@@ -71,6 +74,12 @@
   flex-grow: 1;
 }
 
+/* 顶部区域 + 倒计时栏：固定高度，禁止被压缩 */
+.top-section,
+.countdown-bar {
+  flex-shrink: 0;
+}
+
 .top-section {
   flex-direction: column;
   justify-content: center;
@@ -108,9 +117,12 @@
   text-overflow: ellipsis;
 }
 
+/* 中间课程列表：占据剩余空间并独立滚动 */
 .lesson-scroll {
   flex-direction: column;
   flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0px;
 }
 
 .lesson-item {
@@ -125,12 +137,12 @@
 
 .lesson-active {
   background-color: #1a3a1a;
-  border: 2px solid #4CAF50;
+  border: 2px solid #4caf50;
 }
 
 .lesson-upcoming {
   background-color: #2a2a1a;
-  border: 2px solid #FF9800;
+  border: 2px solid #ff9800;
 }
 
 .lesson-inactive {
@@ -161,19 +173,21 @@
 
 .badge-now {
   font-size: 16px;
-  color: #4CAF50;
+  color: #4caf50;
   font-weight: bold;
 }
 
 .badge-next {
   font-size: 16px;
-  color: #FF9800;
+  color: #ff9800;
   font-weight: bold;
 }
 
+/* 底部栏：固定高度，禁止被压缩 */
 .bottom-bar {
   flex-direction: row;
   justify-content: center;
+  flex-shrink: 0;
   padding: 8px 0 12px 0;
 }
 
@@ -184,17 +198,25 @@
 </style>
 
 <script>
-import { engine, init, startTimers, stopTimers, getScheduleToday, getCountdownText, onUpdate } from '../../common/scheduleEngine'
+import {
+  engine,
+  init,
+  startTimers,
+  stopTimers,
+  getScheduleToday,
+  getCountdownText,
+  onUpdate
+} from "../../common/scheduleEngine"
 
 export default {
   private: {
     inited: false,
     lessons: [],
     currentScheduleId: 0,
-    countdownText: '',
-    currentTime: '',
-    dateLabel: '',
-    footerLabel: '',
+    countdownText: "",
+    currentTime: "",
+    dateLabel: "",
+    footerLabel: "",
     _unsubscribe: null,
     _timer: null
   },
@@ -238,14 +260,20 @@ export default {
   },
 
   refreshDisplay() {
-    this.lessons = getScheduleToday(engine.schedule, engine.currentScheduleId, engine.today, engine.scheduleOverride)
+    this.lessons = getScheduleToday(
+      engine.schedule,
+      engine.currentScheduleId,
+      engine.today,
+      engine.scheduleOverride
+    )
     this.countdownText = getCountdownText(this.lessons, engine.setting.timeOffset)
     this.currentScheduleId = engine.currentScheduleId
     const now = new Date()
-    this.currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0')
-    this.dateLabel = (now.getMonth() + 1) + '/' + now.getDate()
-    const weekNames = ['日', '一', '二', '三', '四', '五', '六']
-    this.footerLabel = '第' + (engine.currentScheduleId + 1) + '周 周' + weekNames[now.getDay()]
+    this.currentTime =
+      String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0")
+    this.dateLabel = now.getMonth() + 1 + "/" + now.getDate()
+    const weekNames = ["日", "一", "二", "三", "四", "五", "六"]
+    this.footerLabel = "第" + (engine.currentScheduleId + 1) + "周 周" + weekNames[now.getDay()]
   }
 }
 </script>
