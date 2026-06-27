@@ -271,20 +271,22 @@ export default {
       engine.scheduleOverride
     )
 
-    if (this._lastScheduleKey !== scheduleKey) {
-      // 课表/日期/临时调课发生变化时才重建列表，避免滚动时整表重绘
+    let shouldRebuild = this._lastScheduleKey !== scheduleKey
+    if (!shouldRebuild && currentLessons.length === this.lessons.length) {
+      // 检测上课状态是否切换，切换时需要重排整表以触发样式更新
+      for (let i = 0; i < this.lessons.length; i++) {
+        if (this.lessons[i].active !== currentLessons[i].active) {
+          shouldRebuild = true
+          break
+        }
+      }
+    }
+    if (shouldRebuild) {
       this._lastScheduleKey = scheduleKey
       this.lessons = currentLessons.map((lesson, index) => ({
         ...lesson,
         id: scheduleKey + ":" + index
       }))
-    } else if (currentLessons.length === this.lessons.length) {
-      // 仅原地更新上课状态，保持列表引用稳定
-      for (let i = 0; i < this.lessons.length; i++) {
-        if (this.lessons[i].active !== currentLessons[i].active) {
-          this.lessons[i].active = currentLessons[i].active
-        }
-      }
     }
 
     this.countdownText = getCountdownText(this.lessons, engine.setting.timeOffset)
