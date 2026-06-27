@@ -1,4 +1,8 @@
-## 快速上手
+## 须知
+
+编译前需要把奶酪课程表的配置文件`config.json`放置到`src/common`目录中
+
+## vela创建项目时自带的说明
 
 ### 1. 开发
 
@@ -29,7 +33,3 @@ windows
 ./husky.sh
 ```
 
-
-## 了解更多
-
-你可以通过我们的[官方文档](https://iot.mi.com/vela/quickapp)熟悉和了解快应用。
