@@ -232,8 +232,8 @@ export default {
     if (!engine.inited) {
       init()
       this.inited = true
-      startTimers()
     }
+    startTimers()
     if (this._timer) clearInterval(this._timer)
     this._timer = setInterval(() => {
       this.refreshDisplay()

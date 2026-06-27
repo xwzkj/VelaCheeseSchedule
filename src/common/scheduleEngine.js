@@ -132,19 +132,15 @@ function getCountdownText(lessons, timeOffset) {
 
 function refreshActiveState() {
   const todayLessons = getScheduleToday(engine.schedule, engine.currentScheduleId, engine.today, engine.scheduleOverride)
+  const scheduleDay = engine.schedule[engine.currentScheduleId]
+  if (!scheduleDay || !scheduleDay[engine.today]) return
+  // 前向追踪上一节非分隔课程，避免第 0 项为分隔符时误用其时间作为"上一节课"
+  let lastLessonIdx = -1
   for (let i = 0; i < todayLessons.length; i++) {
     if (todayLessons[i].isDivider) continue
-    let lastIndex = 0
-    for (let j = i - 1; j >= 0; j--) {
-      if (!todayLessons[j].isDivider) {
-        lastIndex = j
-        break
-      }
-    }
-    const scheduleDay = engine.schedule[engine.currentScheduleId]
-    if (scheduleDay && scheduleDay[engine.today]) {
-      scheduleDay[engine.today].lessons[i].active = isActiveTime(todayLessons[i].time, todayLessons[lastIndex] ? todayLessons[lastIndex].time : null, engine.setting.timeOffset)
-    }
+    const lastTime = lastLessonIdx >= 0 ? todayLessons[lastLessonIdx].time : null
+    scheduleDay[engine.today].lessons[i].active = isActiveTime(todayLessons[i].time, lastTime, engine.setting.timeOffset)
+    lastLessonIdx = i
   }
 }
 
