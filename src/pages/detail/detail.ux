@@ -1,0 +1,246 @@
+<template>
+  <div class="page-container" onswipe="onSwipe">
+    <div class="selector-bar" onclick="onTogglePanel">
+      <text class="selector-text">{{displayLabel}}</text>
+    </div>
+    <div if="{{expanded}}" class="picker-panel">
+      <picker
+        type="text"
+        class="week-picker"
+        range="{{weekOptions}}"
+        selected="{{weekIndex}}"
+        onchange="onWeekChange"
+      ></picker>
+      <picker
+        type="text"
+        class="day-picker"
+        range="{{dayOptions}}"
+        selected="{{dayIndex}}"
+        onchange="onDayChange"
+      ></picker>
+    </div>
+    <scroll scroll-y="true" class="lesson-scroll">
+      <div if="{{lessons.length === 0}}" class="empty-wrap">
+        <text class="empty-text">今日无课</text>
+      </div>
+      <block for="{{lessons}}" tid="id">
+        <div if="{{$item.isDivider}}" class="divider-line"></div>
+        <div else class="lesson-item">
+          <div class="lesson-content">
+            <text class="lesson-name">{{ $item.name }}</text>
+            <text class="lesson-time">{{ $item.time }}</text>
+          </div>
+        </div>
+      </block>
+    </scroll>
+  </div>
+</template>
+
+<style>
+.page-container {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+}
+
+.selector-bar {
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 48px;
+  margin-left: 36px;
+  margin-right: 36px;
+  padding: 14px 0;
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  border: 2px solid #333333;
+}
+
+.selector-text {
+  font-size: 24px;
+  color: #ffffff;
+  text-align: center;
+}
+
+.picker-panel {
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  height: 128px;
+  margin: 12px 16px 0 16px;
+  padding: 8px 12px;
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  border: 2px solid #333333;
+}
+
+.week-picker,
+.day-picker {
+  flex-grow: 1;
+  height: 112px;
+  font-size: 20px;
+  selected-font-size: 22px;
+  color: #ffffff;
+  text-align: center;
+}
+
+.week-picker {
+  margin-right: 6px;
+}
+
+.day-picker {
+  margin-left: 6px;
+}
+
+.lesson-scroll {
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0px;
+  margin-top: 12px;
+  padding-bottom: 48px;
+}
+
+.empty-wrap {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.empty-text {
+  font-size: 24px;
+  color: #666666;
+}
+
+.lesson-item {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  margin: 3px 16px;
+  border-radius: 10px;
+  background-color: #1a1a1a;
+}
+
+.lesson-content {
+  flex-direction: column;
+}
+
+.lesson-name {
+  font-size: 22px;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.lesson-time {
+  font-size: 17px;
+  color: #888888;
+  margin-top: 2px;
+}
+
+.divider-line {
+  height: 2px;
+  margin: 6px 24px;
+  background-color: #333333;
+}
+</style>
+
+<script>
+import router from "@system.router"
+import { engine, init, getScheduleToday } from "../../common/scheduleEngine"
+
+const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+const DAY_LABELS = ["一", "二", "三", "四", "五", "六", "日"]
+
+export default {
+  protected: {
+    weekIndex: 0,
+    dayIndex: 0
+  },
+
+  private: {
+    expanded: false,
+    displayLabel: "",
+    weekOptions: [],
+    dayOptions: [],
+    lessons: []
+  },
+
+  onInit() {
+    if (!engine.inited) {
+      init()
+    }
+    this.weekIndex = parseInt(this.weekIndex, 10) || 0
+    this.dayIndex = parseInt(this.dayIndex, 10) || 0
+    this.buildOptions()
+    this.updateDisplayLabel()
+    this.refreshLessons()
+  },
+
+  onShow() {
+    this.refreshLessons()
+  },
+
+  buildOptions() {
+    const totalWeeks = Math.max(engine.schedule.length, 1)
+    const weekOptions = []
+    for (let i = 0; i < totalWeeks; i++) {
+      weekOptions.push("课表" + (i + 1))
+    }
+    const dayOptions = []
+    for (let i = 0; i < 7; i++) {
+      dayOptions.push("周" + DAY_LABELS[i])
+    }
+    this.weekOptions = weekOptions
+    this.dayOptions = dayOptions
+  },
+
+  onTogglePanel() {
+    this.expanded = !this.expanded
+  },
+
+  onSwipe(e) {
+    if (e && e.direction === "right") {
+      router.back()
+    }
+  },
+
+  onWeekChange(e) {
+    if (!e) return
+    this.weekIndex = e.newSelected
+    this.updateDisplayLabel()
+    this.refreshLessons()
+  },
+
+  onDayChange(e) {
+    if (!e) return
+    this.dayIndex = e.newSelected
+    this.updateDisplayLabel()
+    this.refreshLessons()
+  },
+
+  updateDisplayLabel() {
+    this.displayLabel =
+      "课表" + (this.weekIndex + 1) + " 周" + DAY_LABELS[this.dayIndex]
+  },
+
+  refreshLessons() {
+    const dayKey = WEEKDAYS[this.dayIndex]
+    const override = engine.scheduleOverride
+    const lessons = getScheduleToday(
+      engine.schedule,
+      this.weekIndex,
+      dayKey,
+      override && override.date ? override : { date: "1970-01-01", override: [] }
+    )
+    this.lessons = lessons.map((lesson, index) => ({
+      ...lesson,
+      id: this.weekIndex + ":" + this.dayIndex + ":" + index
+    }))
+  }
+}
+</script>

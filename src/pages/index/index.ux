@@ -30,7 +30,7 @@
           </div>
         </block>
       </scroll>
-      <div class="bottom-bar">
+      <div class="bottom-bar" onclick="onFooterTap">
         <text class="footer-text">{{ footerLabel }}</text>
       </div>
     </div>
@@ -188,16 +188,18 @@
   flex-direction: row;
   justify-content: center;
   flex-shrink: 0;
-  padding: 8px 0 12px 0;
+  padding: 8px 0 16px 0;
 }
 
 .footer-text {
   font-size: 18px;
   color: #666666;
+  text-decoration: underline;
 }
 </style>
 
 <script>
+import router from "@system.router"
 import {
   engine,
   init,
@@ -260,6 +262,17 @@ export default {
     }
   },
 
+  onFooterTap() {
+    const day = new Date().getDay()
+    router.push({
+      uri: "/pages/detail",
+      params: {
+        weekIndex: this.currentScheduleId,
+        dayIndex: day === 0 ? 6 : day - 1
+      }
+    })
+  },
+
   refreshDisplay() {
     const scheduleKey = [engine.currentScheduleId, engine.today, engine.scheduleOverride.date].join(
       "|"
@@ -296,7 +309,7 @@ export default {
       String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0")
     this.dateLabel = now.getMonth() + 1 + "/" + now.getDate()
     const weekNames = ["日", "一", "二", "三", "四", "五", "六"]
-    this.footerLabel = "第" + (engine.currentScheduleId + 1) + "周 周" + weekNames[now.getDay()]
+    this.footerLabel = "课表" + (engine.currentScheduleId + 1) + " 周" + weekNames[now.getDay()]
   }
 }
 </script>
