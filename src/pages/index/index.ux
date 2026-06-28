@@ -14,7 +14,7 @@
       <div class="countdown-bar">
         <text class="countdown-text">{{ countdownText }}</text>
       </div>
-      <scroll scroll-y="true" class="lesson-scroll">
+      <scroll id="lessonScroll" scroll-y="true" class="lesson-scroll">
         <block for="{{lessons}}" tid="id">
           <div if="{{$item.isDivider}}" class="divider-line"></div>
           <div
@@ -123,13 +123,15 @@
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0px;
+  padding-bottom: 6px;
 }
 
 .lesson-item {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
+  height: 70px;
+  padding: 0 16px;
   margin: 3px 16px;
   border-radius: 10px;
   background-color: #1a1a1a;
@@ -157,6 +159,8 @@
   font-size: 22px;
   color: #ffffff;
   font-weight: bold;
+  lines: 1;
+  text-overflow: ellipsis;
 }
 
 .lesson-time {
@@ -221,7 +225,8 @@ export default {
     footerLabel: "",
     _unsubscribe: null,
     _timer: null,
-    _lastScheduleKey: ""
+    _lastScheduleKey: "",
+    _lastActiveIndex: -1
   },
 
   onInit() {
@@ -273,6 +278,26 @@ export default {
     })
   },
 
+  scrollToActive(activeIndex) {
+    const targetIndex = Math.max(0, activeIndex - 1)
+    const LESSON_ITEM_HEIGHT = 70
+    const DIVIDER_HEIGHT = 14
+    let scrollTop = 0
+    for (let i = 0; i < targetIndex; i++) {
+      if (this.lessons[i] && this.lessons[i].isDivider) {
+        scrollTop += DIVIDER_HEIGHT
+      } else {
+        scrollTop += LESSON_ITEM_HEIGHT
+      }
+    }
+    setTimeout(() => {
+      const scroll = this.$element("lessonScroll")
+      if (scroll && scroll.scrollTo) {
+        scroll.scrollTo({ top: scrollTop, behavior: 'smooth' })
+      }
+    }, 100)
+  },
+
   refreshDisplay() {
     const scheduleKey = [engine.currentScheduleId, engine.today, engine.scheduleOverride.date].join(
       "|"
@@ -285,13 +310,19 @@ export default {
     )
 
     let shouldRebuild = this._lastScheduleKey !== scheduleKey
+    let activeIndex = -1
     if (!shouldRebuild && currentLessons.length === this.lessons.length) {
       // 检测上课状态是否切换，切换时需要重排整表以触发样式更新
       for (let i = 0; i < this.lessons.length; i++) {
         if (this.lessons[i].active !== currentLessons[i].active) {
           shouldRebuild = true
-          break
         }
+      }
+    }
+    for (let i = 0; i < currentLessons.length; i++) {
+      if (currentLessons[i].active === 2) {
+        activeIndex = i
+        break
       }
     }
     if (shouldRebuild) {
@@ -300,6 +331,14 @@ export default {
         ...lesson,
         id: scheduleKey + ":" + index
       }))
+      // 当前课程发生变化时滚动到当前课程，并露出上一节
+      if (activeIndex !== -1 && activeIndex !== this._lastActiveIndex) {
+        this._lastActiveIndex = activeIndex
+        this.scrollToActive(activeIndex)
+      }
+    }
+    if (activeIndex === -1) {
+      this._lastActiveIndex = -1
     }
 
     this.countdownText = getCountdownText(this.lessons, engine.setting.timeOffset)
