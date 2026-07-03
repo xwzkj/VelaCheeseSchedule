@@ -279,9 +279,12 @@ export default {
   },
 
   scrollToActive(activeIndex) {
-    const targetIndex = Math.max(0, activeIndex - 1)
-    const LESSON_ITEM_HEIGHT = 70
-    const DIVIDER_HEIGHT = 14
+    let targetIndex = Math.max(0, activeIndex - 1)
+    while (targetIndex > 0 && this.lessons[targetIndex] && this.lessons[targetIndex].isDivider) {
+      targetIndex--
+    }
+    const LESSON_ITEM_HEIGHT = 70 + 3 + 3
+    const DIVIDER_HEIGHT = 2 + 6 + 6
     let scrollTop = 0
     for (let i = 0; i < targetIndex; i++) {
       if (this.lessons[i] && this.lessons[i].isDivider) {
@@ -319,12 +322,18 @@ export default {
         }
       }
     }
+    let upcomingIndex = -1
     for (let i = 0; i < currentLessons.length; i++) {
       if (currentLessons[i].active === 2) {
         activeIndex = i
         break
       }
+      if (currentLessons[i].active === 1 && upcomingIndex === -1) {
+        upcomingIndex = i
+      }
     }
+    // 课间时没有正在进行的课程，回退到"下一节"作为滚动目标
+    if (activeIndex === -1) activeIndex = upcomingIndex
     if (shouldRebuild) {
       this._lastScheduleKey = scheduleKey
       this.lessons = currentLessons.map((lesson, index) => ({
