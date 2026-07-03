@@ -4,7 +4,9 @@
       <text class="loading-text">加载中...</text>
     </div>
     <div elif="{{lessons.length === 0}}" class="empty-wrap">
+      <div class="empty-spacer"></div>
       <text class="empty-text">今日无课</text>
+      <image class="about-icon" src="/common/about.png" onclick="onAboutTap"></image>
     </div>
     <div else class="schedule-wrap">
       <div class="top-section">
@@ -59,9 +61,10 @@
 
 .empty-wrap {
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   flex-grow: 1;
+  padding: 16px 0;
 }
 
 .empty-text {
@@ -194,10 +197,16 @@
   color: #aaaaaa;
   text-decoration: underline;
 }
+
+.about-icon {
+  width: 32px;
+  height: 32px;
+}
 </style>
 
 <script>
 import router from "@system.router"
+import storage from "@system.storage"
 import {
   engine,
   init,
@@ -231,7 +240,7 @@ export default {
 
   onShow() {
     if (!engine.inited) {
-      init()
+      init(storage)
       this.inited = true
     }
     startTimers()
@@ -272,6 +281,12 @@ export default {
     })
   },
 
+  onAboutTap() {
+    router.push({
+      uri: "/pages/about"
+    })
+  },
+
   scrollToActive(activeIndex) {
     let targetIndex = Math.max(0, activeIndex - 1)
     while (targetIndex > 0 && this.lessons[targetIndex] && this.lessons[targetIndex].isDivider) {
@@ -308,11 +323,20 @@ export default {
 
     let shouldRebuild = this._lastScheduleKey !== scheduleKey
     let activeIndex = -1
+    if (!shouldRebuild && currentLessons.length !== this.lessons.length) {
+      shouldRebuild = true
+    }
     if (!shouldRebuild && currentLessons.length === this.lessons.length) {
-      // 检测上课状态是否切换，切换时需要重排整表以触发样式更新
+      // 检测上课状态或课程内容是否切换，切换时需要重排整表以触发样式更新
       for (let i = 0; i < this.lessons.length; i++) {
-        if (this.lessons[i].active !== currentLessons[i].active) {
+        const oldItem = this.lessons[i]
+        const newItem = currentLessons[i]
+        if (oldItem.active !== newItem.active ||
+            oldItem.name !== newItem.name ||
+            oldItem.time !== newItem.time ||
+            oldItem.isDivider !== newItem.isDivider) {
           shouldRebuild = true
+          break
         }
       }
     }

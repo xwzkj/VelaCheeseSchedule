@@ -11,6 +11,18 @@
   "features": [
     {
       "name": "system.router"
+    },
+    {
+      "name": "system.storage"
+    },
+    {
+      "name": "system.interconnect"
+    },
+    {
+      "name": "system.prompt"
+    },
+    {
+      "name": "system.app"
     }
   ],
   "config": {
@@ -25,6 +37,9 @@
       },
       "pages/detail": {
         "component": "detail"
+      },
+      "pages/about": {
+        "component": "about"
       }
     }
   }

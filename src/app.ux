@@ -1,7 +1,22 @@
 <script>
+import storage from "@system.storage"
+import interconnect from "@system.interconnect"
+import prompt from "@system.prompt"
+import { engine, init, applyConfigString } from "./common/scheduleEngine"
+
 export default {
   onCreate() {
-    console.log("app created")
+    init(storage)
+    const connect = interconnect.instance()
+    connect.onmessage = (data) => {
+      const content = (data && data.data) || ""
+      const ok = applyConfigString(content, storage)
+      if (ok) {
+        prompt.showToast({ message: "配置已更新", duration: 2000 })
+      } else {
+        prompt.showToast({ message: "配置格式不支持", duration: 2000 })
+      }
+    }
   },
   onDestroy() {
     console.log("app destroyed")

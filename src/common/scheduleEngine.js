@@ -1,10 +1,10 @@
-import defaultConfig from './config.json'
-
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
 const DEFAULT_SETTING = {
   timeOffset: 0
 }
+
+const STORAGE_KEY = 'configCache'
 
 function createEmptyDay() {
   return { pattern: -1, lessons: [] }
@@ -209,18 +209,18 @@ function csesParse(str) {
   return result
 }
 
-function importFromCSES(csesStr) {
+function csesToConfig(csesStr) {
   try {
     const cses = csesParse(csesStr)
     if (!cses || cses.version !== 1) {
-      return { success: false, message: '不支持的配置版本' }
+      return null
     }
-    engine.patterns = []
-    engine.schedule = []
+    const patterns = []
+    const schedule = []
     const hasEven = cses.schedules.some(item => item.weeks === 'even')
     const targetCount = hasEven ? 2 : 1
-    while (engine.schedule.length < targetCount) {
-      engine.schedule.push(createEmptySchedule())
+    while (schedule.length < targetCount) {
+      schedule.push(createEmptySchedule())
     }
     for (const scheduleEntry of cses.schedules) {
       const dayIdx = scheduleEntry.enable_day - 1
@@ -232,29 +232,36 @@ function importFromCSES(csesStr) {
         isDivider: false
       }))
       const newPattern = lessons.map(item => ({ isDivider: false, time: item.time }))
-      let patternIdx = engine.patterns.findIndex(p => JSON.stringify(p.data) === JSON.stringify(newPattern))
+      let patternIdx = patterns.findIndex(p => JSON.stringify(p.data) === JSON.stringify(newPattern))
       if (patternIdx === -1) {
-        engine.patterns.push({ name: '时间表' + (engine.patterns.length + 1), data: newPattern })
-        patternIdx = engine.patterns.length - 1
+        patterns.push({ name: '时间表' + (patterns.length + 1), data: newPattern })
+        patternIdx = patterns.length - 1
       }
       const day = { pattern: patternIdx, lessons: lessons }
       if (scheduleEntry.weeks === 'all') {
-        for (let j = 0; j < engine.schedule.length; j++) {
-          engine.schedule[j][WEEKDAYS[dayIdx]] = day
+        for (let j = 0; j < schedule.length; j++) {
+          schedule[j][WEEKDAYS[dayIdx]] = day
         }
       } else {
         const scheduleIdx = scheduleEntry.weeks === 'even' ? 1 : 0
-        if (engine.schedule[scheduleIdx]) {
-          engine.schedule[scheduleIdx][WEEKDAYS[dayIdx]] = day
+        if (schedule[scheduleIdx]) {
+          schedule[scheduleIdx][WEEKDAYS[dayIdx]] = day
         }
       }
     }
-    while (engine.patterns.length < 7) {
-      engine.patterns.push({ name: '空时间表' + (engine.patterns.length + 1), data: [] })
+    while (patterns.length < 7) {
+      patterns.push({ name: '空时间表' + (patterns.length + 1), data: [] })
     }
-    return { success: true, message: '导入成功' }
+    return {
+      version: 1,
+      setting: { ...DEFAULT_SETTING },
+      patterns: patterns,
+      schedule: schedule,
+      scheduleOverride: { date: '1970-01-01', override: [] },
+      firstWeekMonday: ''
+    }
   } catch (e) {
-    return { success: false, message: '导入失败' }
+    return null
   }
 }
 
@@ -265,40 +272,115 @@ function setFirstWeek(currentWeekNumber) {
   engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
 }
 
-function init() {
+function applyConfigObject(d) {
+  if (!d) return false
   try {
-    const d = defaultConfig
-    if (d) {
-      if (d.patterns) engine.patterns = d.patterns
-      if (d.schedule) {
-        engine.schedule = d.schedule.length ? d.schedule : [d.schedule]
-      }
-      if (d.scheduleOverride && d.scheduleOverride.date === formatDate()) {
-        engine.scheduleOverride = d.scheduleOverride
-      }
-      if (d.firstWeekMonday) engine.firstWeekMonday = d.firstWeekMonday
-      if (d.setting) {
-        for (const key in d.setting) {
-          if (key in engine.setting) {
-            engine.setting[key] = d.setting[key]
-          }
+    if (d.patterns) engine.patterns = d.patterns
+    if (d.schedule) {
+      engine.schedule = d.schedule.length ? d.schedule : [d.schedule]
+    }
+    if (d.scheduleOverride && d.scheduleOverride.date === formatDate()) {
+      engine.scheduleOverride = d.scheduleOverride
+    }
+    if (d.firstWeekMonday) engine.firstWeekMonday = d.firstWeekMonday
+    if (d.setting) {
+      for (const key in d.setting) {
+        if (key in engine.setting) {
+          engine.setting[key] = d.setting[key]
         }
       }
     }
-  } catch (e) {}
-  if (!engine.patterns || engine.patterns.length === 0) {
-    engine.patterns = []
-    for (let i = 0; i < 7; i++) {
-      engine.patterns.push({ name: '时间表' + (i + 1), data: [] })
+  } catch (e) {
+    return false
+  }
+  return true
+}
+
+function applyConfigString(str, storage) {
+  if (!str || typeof str !== 'string') return false
+  let wrapper
+  try {
+    wrapper = JSON.parse(str)
+  } catch (e) {
+    return false
+  }
+  if (!wrapper || wrapper.version !== 1 || typeof wrapper.data !== 'string') return false
+  let configStr = ''
+  if (wrapper.type === 'CSES') {
+    const config = csesToConfig(wrapper.data)
+    if (!config) return false
+    configStr = JSON.stringify(config)
+  } else if (wrapper.type === 'config') {
+    configStr = wrapper.data
+  } else {
+    return false
+  }
+  let obj
+  try {
+    obj = JSON.parse(configStr)
+  } catch (e) {
+    return false
+  }
+  if (!applyConfigObject(obj)) return false
+  engine.today = getToday()
+  engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
+  refreshActiveState()
+
+  if (storage) {
+    try {
+      storage.set({
+        key: STORAGE_KEY,
+        value: configStr,
+        success: function() {
+          notifyListeners()
+        },
+        fail: function(data, code) {
+          console.error('scheduleEngine: storage.set failed', data, code)
+          notifyListeners()
+        }
+      })
+    } catch (e) {
+      console.error('scheduleEngine: storage.set exception', e)
+      notifyListeners()
     }
+  } else {
+    notifyListeners()
   }
-  if (engine.schedule.length === 0) {
-    engine.schedule.push(createEmptySchedule())
-  }
+  return true
+}
+
+function init(storage) {
   engine.today = getToday()
   engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
   refreshActiveState()
   engine.inited = true
+  if (storage) {
+    try {
+      storage.get({
+        key: STORAGE_KEY,
+        success: (data) => {
+          if (data) {
+            try {
+              const obj = JSON.parse(data)
+              if (applyConfigObject(obj)) {
+                engine.today = getToday()
+                engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
+                refreshActiveState()
+                notifyListeners()
+              }
+            } catch (e) {
+              console.error('scheduleEngine: parse cached config failed', e)
+            }
+          }
+        },
+        fail: function(data, code) {
+          console.error('scheduleEngine: storage.get failed', data, code)
+        }
+      })
+    } catch (e) {
+      console.error('scheduleEngine: storage.get exception', e)
+    }
+  }
 }
 
 function save() {
@@ -348,10 +430,12 @@ export {
   init,
   save,
   setFirstWeek,
-  importFromCSES,
+  csesToConfig,
   getScheduleToday,
   getCountdownText,
   startTimers,
   stopTimers,
-  onUpdate
+  onUpdate,
+  applyConfigString,
+  STORAGE_KEY
 }

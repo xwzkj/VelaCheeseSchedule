@@ -33,6 +33,9 @@
         </div>
       </block>
     </scroll>
+    <div class="bottom-bar" onclick="onAboutTap">
+      <image class="about-icon" src="/common/about.png"></image>
+    </div>
   </div>
 </template>
 
@@ -147,10 +150,24 @@
   margin: 6px 24px;
   background-color: #444444;
 }
+
+.bottom-bar {
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 8px 0 16px 0;
+}
+
+.about-icon {
+  width: 24px;
+  height: 24px;
+}
 </style>
 
 <script>
 import router from "@system.router"
+import storage from "@system.storage"
 import { engine, init, getScheduleToday } from "../../common/scheduleEngine"
 
 const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
@@ -172,7 +189,7 @@ export default {
 
   onInit() {
     if (!engine.inited) {
-      init()
+      init(storage)
     }
     this.weekIndex = parseInt(this.weekIndex, 10) || 0
     this.dayIndex = parseInt(this.dayIndex, 10) || 0
@@ -207,6 +224,12 @@ export default {
     if (e && e.direction === "right") {
       router.back()
     }
+  },
+
+  onAboutTap() {
+    router.push({
+      uri: "/pages/about"
+    })
   },
 
   onWeekChange(e) {

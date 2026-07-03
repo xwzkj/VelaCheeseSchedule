@@ -1,0 +1,1233 @@
+{
+  "version": 1,
+  "setting": {
+    "startup": true,
+    "zoom": 1,
+    "heightFactor": 1,
+    "avoidCoverTitleBar": true,
+    "timeOffset": 0,
+    "drawDynamicProbability": true,
+    "drawPreventDuplicate": true,
+    "drawAutoNewRound": true,
+    "drawPreventCheating": true,
+    "drawSmallWindowEnabled": true,
+    "drawExcludeLeaveStudents": true,
+    "themeColor": "#ce9e04",
+    "password": "",
+    "passwordScope": [
+      "editor-password",
+      "editor-draw",
+      "editor-setting"
+    ],
+    "AIapiKey": "",
+    "AIplayVoiceWhenLessonSwitch": false,
+    "widgetWordCardHistory": []
+  },
+  "drawCandidates": [],
+  "patterns": [
+    {
+      "name": "时间表1",
+      "data": [
+        {
+          "isDivider": false,
+          "time": "06:50-07:30"
+        },
+        {
+          "isDivider": true,
+          "time": "08:00-08:40"
+        },
+        {
+          "isDivider": false,
+          "time": "07:40-08:25"
+        },
+        {
+          "isDivider": false,
+          "time": "08:35-09:20"
+        },
+        {
+          "isDivider": false,
+          "time": "09:50-10:35"
+        },
+        {
+          "isDivider": false,
+          "time": "10:45-11:27"
+        },
+        {
+          "isDivider": true,
+          "time": "08:00-08:40"
+        },
+        {
+          "isDivider": false,
+          "time": "13:40-14:25"
+        },
+        {
+          "isDivider": false,
+          "time": "14:35-15:20"
+        },
+        {
+          "isDivider": false,
+          "time": "15:35-16:20"
+        },
+        {
+          "isDivider": false,
+          "time": "16:30-17:17"
+        },
+        {
+          "isDivider": true,
+          "time": "08:00-08:40"
+        },
+        {
+          "isDivider": false,
+          "time": "18:20-19:20"
+        },
+        {
+          "isDivider": false,
+          "time": "19:30-20:27"
+        }
+      ]
+    },
+    {
+      "name": "时间表2",
+      "data": [
+        {
+          "isDivider": false,
+          "time": "06:50-07:30"
+        },
+        {
+          "isDivider": true,
+          "time": "08:00-08:40"
+        },
+        {
+          "isDivider": false,
+          "time": "07:40-08:25"
+        },
+        {
+          "isDivider": false,
+          "time": "08:35-09:20"
+        },
+        {
+          "isDivider": false,
+          "time": "09:30-10:15"
+        },
+        {
+          "isDivider": false,
+          "time": "10:25-11:07"
+        },
+        {
+          "isDivider": true,
+          "time": "08:00-08:40"
+        },
+        {
+          "isDivider": false,
+          "time": "13:40-14:25"
+        },
+        {
+          "isDivider": false,
+          "time": "14:35-15:20"
+        },
+        {
+          "isDivider": false,
+          "time": "15:35-16:20"
+        },
+        {
+          "isDivider": false,
+          "time": "16:30-17:12"
+        },
+        {
+          "isDivider": true,
+          "time": "08:00-08:40"
+        },
+        {
+          "isDivider": false,
+          "time": "18:20-19:20"
+        },
+        {
+          "isDivider": false,
+          "time": "19:30-20:27"
+        }
+      ]
+    },
+    {
+      "name": "空时间表3",
+      "data": []
+    },
+    {
+      "name": "空时间表4",
+      "data": []
+    },
+    {
+      "name": "空时间表5",
+      "data": []
+    },
+    {
+      "name": "空时间表6",
+      "data": []
+    },
+    {
+      "name": "空时间表7",
+      "data": []
+    }
+  ],
+  "schedule": [
+    {
+      "mon": {
+        "pattern": 0,
+        "lessons": [
+          {
+            "name": "班主任",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "物理",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "化学",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "09:50-10:35",
+            "isDivider": false
+          },
+          {
+            "name": "数学",
+            "time": "10:45-11:27",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "英语",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "体育",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "16:30-17:17",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "化学",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "化学",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      },
+      "tue": {
+        "pattern": 0,
+        "lessons": [
+          {
+            "name": "数学",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "语文",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "数学",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "生物",
+            "time": "09:50-10:35",
+            "isDivider": false
+          },
+          {
+            "name": "物理",
+            "time": "10:45-11:27",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "政治",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "英语",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "历史",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "16:30-17:17",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "英语",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "英语",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      },
+      "wed": {
+        "pattern": 0,
+        "lessons": [
+          {
+            "name": "化学",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "数学",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "化学",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "09:50-10:35",
+            "isDivider": false
+          },
+          {
+            "name": "音乐",
+            "time": "10:45-11:27",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "英语",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "生物",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "16:30-17:17",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "语文",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      },
+      "thu": {
+        "pattern": 0,
+        "lessons": [
+          {
+            "name": "英语",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "英语",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "化学",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "体育",
+            "time": "09:50-10:35",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "10:45-11:27",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "生涯",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "数学",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "16:30-17:17",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "数学",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "数学",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      },
+      "fri": {
+        "pattern": 0,
+        "lessons": [
+          {
+            "name": "语文",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "英语",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "物理",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "生物",
+            "time": "09:50-10:35",
+            "isDivider": false
+          },
+          {
+            "name": "地理",
+            "time": "10:45-11:27",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "数学",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "劳动",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "16:30-17:17",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "生物",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "生物",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      },
+      "sat": {
+        "pattern": 1,
+        "lessons": [
+          {
+            "name": "班主任",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "物理",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "生物",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "数学",
+            "time": "09:30-10:15",
+            "isDivider": false
+          },
+          {
+            "name": "数学",
+            "time": "10:25-11:07",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "英语",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "英语",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "16:30-17:12",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "物理",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "物理",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      },
+      "sun": {
+        "pattern": 1,
+        "lessons": [
+          {
+            "name": "空",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "空",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "09:30-10:15",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "10:25-11:07",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "空",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "16:30-17:12",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "空",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      }
+    },
+    {
+      "mon": {
+        "pattern": 0,
+        "lessons": [
+          {
+            "name": "班主任",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "物理",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "化学",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "09:50-10:35",
+            "isDivider": false
+          },
+          {
+            "name": "数学",
+            "time": "10:45-11:27",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "英语",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "体育",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "16:30-17:17",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "化学",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "化学",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      },
+      "tue": {
+        "pattern": 0,
+        "lessons": [
+          {
+            "name": "数学",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "语文",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "数学",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "生物",
+            "time": "09:50-10:35",
+            "isDivider": false
+          },
+          {
+            "name": "物理",
+            "time": "10:45-11:27",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "政治",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "英语",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "历史",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "16:30-17:17",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "英语",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "英语",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      },
+      "wed": {
+        "pattern": 0,
+        "lessons": [
+          {
+            "name": "化学",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "数学",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "化学",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "09:50-10:35",
+            "isDivider": false
+          },
+          {
+            "name": "美术",
+            "time": "10:45-11:27",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "英语",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "生物",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "16:30-17:17",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "语文",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      },
+      "thu": {
+        "pattern": 0,
+        "lessons": [
+          {
+            "name": "英语",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "英语",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "化学",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "体育",
+            "time": "09:50-10:35",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "10:45-11:27",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "心理",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "数学",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "16:30-17:17",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "数学",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "数学",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      },
+      "fri": {
+        "pattern": 0,
+        "lessons": [
+          {
+            "name": "语文",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "英语",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "物理",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "生物",
+            "time": "09:50-10:35",
+            "isDivider": false
+          },
+          {
+            "name": "地理",
+            "time": "10:45-11:27",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "数学",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "劳动",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "自习",
+            "time": "16:30-17:17",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "生物",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "生物",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      },
+      "sat": {
+        "pattern": 1,
+        "lessons": [
+          {
+            "name": "班主任",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "物理",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "生物",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "数学",
+            "time": "09:30-10:15",
+            "isDivider": false
+          },
+          {
+            "name": "数学",
+            "time": "10:25-11:07",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "英语",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "英语",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "语文",
+            "time": "16:30-17:12",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "物理",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "物理",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      },
+      "sun": {
+        "pattern": 1,
+        "lessons": [
+          {
+            "name": "空",
+            "time": "06:50-07:30",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "空",
+            "time": "07:40-08:25",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:35-09:20",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "09:30-10:15",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "10:25-11:07",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "空",
+            "time": "13:40-14:25",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "14:35-15:20",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "15:35-16:20",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "16:30-17:12",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "08:00-08:40",
+            "isDivider": true
+          },
+          {
+            "name": "空",
+            "time": "18:20-19:20",
+            "isDivider": false
+          },
+          {
+            "name": "空",
+            "time": "19:30-20:27",
+            "isDivider": false
+          }
+        ]
+      }
+    }
+  ],
+  "scheduleOverride": {
+    "date": "1970-01-01",
+    "override": []
+  },
+  "firstWeekMonday": "2026-02-16",
+  "widgets": []
+}
