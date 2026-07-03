@@ -297,64 +297,94 @@ function applyConfigObject(d) {
 }
 
 function applyConfigString(str, storage) {
-  if (!str || typeof str !== 'string') return false
-  let wrapper
-  try {
-    wrapper = JSON.parse(str)
-  } catch (e) {
-    return false
-  }
-  if (!wrapper || wrapper.version !== 1 || typeof wrapper.data !== 'string') return false
-  let configStr = ''
-  if (wrapper.type === 'CSES') {
-    const config = csesToConfig(wrapper.data)
-    if (!config) return false
-    configStr = JSON.stringify(config)
-  } else if (wrapper.type === 'config') {
-    configStr = wrapper.data
-  } else {
-    return false
-  }
-  let obj
-  try {
-    obj = JSON.parse(configStr)
-  } catch (e) {
-    return false
-  }
-  if (!applyConfigObject(obj)) return false
-  engine.today = getToday()
-  engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
-  refreshActiveState()
+  return new Promise((resolve) => {
+    if (!str || typeof str !== 'string') {
+      resolve(false)
+      return
+    }
+    let wrapper
+    try {
+      wrapper = JSON.parse(str)
+    } catch (e) {
+      resolve(false)
+      return
+    }
+    if (!wrapper || wrapper.version !== 1 || typeof wrapper.data !== 'string') {
+      resolve(false)
+      return
+    }
+    let configStr = ''
+    if (wrapper.type === 'CSES') {
+      const config = csesToConfig(wrapper.data)
+      if (!config) {
+        resolve(false)
+        return
+      }
+      configStr = JSON.stringify(config)
+    } else if (wrapper.type === 'config') {
+      configStr = wrapper.data
+    } else {
+      resolve(false)
+      return
+    }
+    let obj
+    try {
+      obj = JSON.parse(configStr)
+    } catch (e) {
+      resolve(false)
+      return
+    }
+    if (!applyConfigObject(obj)) {
+      resolve(false)
+      return
+    }
+    engine.today = getToday()
+    engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
+    refreshActiveState()
+    notifyListeners()
 
-  if (storage) {
+    if (!storage) {
+      resolve(true)
+      return
+    }
+
     try {
       storage.set({
         key: STORAGE_KEY,
         value: configStr,
         success: function() {
           notifyListeners()
+          resolve(true)
         },
         fail: function(data, code) {
           console.error('scheduleEngine: storage.set failed', data, code)
-          notifyListeners()
+          resolve(true)
         }
       })
     } catch (e) {
       console.error('scheduleEngine: storage.set exception', e)
-      notifyListeners()
+      resolve(true)
     }
-  } else {
-    notifyListeners()
-  }
-  return true
+  })
 }
 
 function init(storage) {
-  engine.today = getToday()
-  engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
-  refreshActiveState()
-  engine.inited = true
-  if (storage) {
+  return new Promise((resolve) => {
+    if (engine.inited) {
+      resolve()
+      return
+    }
+
+    engine.today = getToday()
+    engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
+    refreshActiveState()
+    engine.inited = true
+
+    if (!storage) {
+      resolve()
+      return
+    }
+
     try {
       storage.get({
         key: STORAGE_KEY,
@@ -372,15 +402,18 @@ function init(storage) {
               console.error('scheduleEngine: parse cached config failed', e)
             }
           }
+          resolve()
         },
         fail: function(data, code) {
           console.error('scheduleEngine: storage.get failed', data, code)
+          resolve()
         }
       })
     } catch (e) {
       console.error('scheduleEngine: storage.get exception', e)
+      resolve()
     }
-  }
+  })
 }
 
 function save() {

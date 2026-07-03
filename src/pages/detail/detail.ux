@@ -187,9 +187,9 @@ export default {
     lessons: []
   },
 
-  onInit() {
+  async onInit() {
     if (!engine.inited) {
-      init(storage)
+      await init(storage)
     }
     this.weekIndex = parseInt(this.weekIndex, 10) || 0
     this.dayIndex = parseInt(this.dayIndex, 10) || 0

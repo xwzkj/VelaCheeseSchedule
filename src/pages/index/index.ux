@@ -238,9 +238,9 @@ export default {
     })
   },
 
-  onShow() {
+  async onShow() {
     if (!engine.inited) {
-      init(storage)
+      await init(storage)
       this.inited = true
     }
     startTimers()
@@ -311,6 +311,7 @@ export default {
   },
 
   refreshDisplay() {
+    console.log(this.lessons.length)
     const scheduleKey = [engine.currentScheduleId, engine.today, engine.scheduleOverride.date].join(
       "|"
     )
