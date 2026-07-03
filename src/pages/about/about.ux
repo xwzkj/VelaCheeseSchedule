@@ -147,7 +147,6 @@
 <script>
 import router from "@system.router"
 import prompt from "@system.prompt"
-import app from "@system.app"
 import storage from "@system.storage"
 import defaultConfig from "../../common/config.json"
 import { applyConfigString, STORAGE_KEY } from "../../common/scheduleEngine"
@@ -204,23 +203,19 @@ export default {
       })
       const ok = await applyConfigString(wrapper, storage)
       if (ok) {
-        prompt.showToast({ message: "默认课表已导入", duration: 2000 })
-        router.back()
+        prompt.showToast({ message: "默认课表已导入 请重启应用", duration: 1000 })
       } else {
-        prompt.showToast({ message: "导入失败", duration: 2000 })
+        prompt.showToast({ message: "导入失败", duration: 1000 })
       }
     } else if (this.confirmAction === "clear") {
       storage.delete({
         key: STORAGE_KEY,
         success: function() {
-          prompt.showToast({ message: "配置已清除，重启软件生效", duration: 1000 })
-          setTimeout(() => {
-            app.exit()
-          }, 1000)
+          prompt.showToast({ message: "配置已清除 请重启应用", duration: 1000 })
         },
         fail: function(data, code) {
           console.error("scheduleEngine: storage.delete failed", data, code)
-          prompt.showToast({ message: "清除失败", duration: 2000 })
+          prompt.showToast({ message: "清除失败", duration: 1000 })
         }
       })
     }
