@@ -72,12 +72,17 @@ function isActiveTime(time, lastTime, timeOffset) {
   } else {
     flag = (nowTime >= start || nowTime < end) ? 2 : 0
   }
-  if (flag === 0 && resLast) {
-    if (time === lastTime) {
-      if (nowTime < end) flag = 1
+  if (flag === 0) {
+    if (resLast) {
+      if (time === lastTime) {
+        if (nowTime < end) flag = 1
+      } else {
+        const lastEnd = parseInt(resLast[3]) * 60 + parseInt(resLast[4])
+        if (nowTime >= lastEnd && nowTime < start) flag = 1
+      }
     } else {
-      const lastEnd = parseInt(resLast[3]) * 60 + parseInt(resLast[4])
-      if (nowTime >= lastEnd && nowTime < start) flag = 1
+      // 没有上一节课时，当前时间早于本节课开始即视为"下一节"
+      if (nowTime < start) flag = 1
     }
   }
   return flag
