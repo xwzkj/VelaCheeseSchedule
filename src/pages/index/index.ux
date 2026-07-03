@@ -4,9 +4,11 @@
       <text class="loading-text">加载中...</text>
     </div>
     <div elif="{{lessons.length === 0}}" class="empty-wrap">
-      <div class="empty-spacer"></div>
-      <text class="empty-text">今日无课</text>
       <image class="about-icon" src="/common/about.png" onclick="onAboutTap"></image>
+      <text class="empty-text">今日无课</text>
+      <div class="bottom-bar" onclick="onFooterTap">
+        <text class="footer-text">整周课表</text>
+      </div>
     </div>
     <div else class="schedule-wrap">
       <div class="top-section">
