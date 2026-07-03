@@ -196,8 +196,10 @@ function csesParse(str) {
         currentClass = { subject: '', start_time: '', end_time: '' }
         currentClass.subject = trimmed.split(':')[1].trim().replace(/"/g, '')
       } else if (currentClass) {
-        if (trimmed.startsWith('start_time:')) currentClass.start_time = trimmed.split(':')[1].trim().replace(/"/g, '')
-        else if (trimmed.startsWith('end_time:')) currentClass.end_time = trimmed.split(':')[1].trim().replace(/"/g, '')
+        const colonIndex = trimmed.indexOf(':')
+        const value = colonIndex > -1 ? trimmed.substring(colonIndex + 1).trim().replace(/"/g, '') : ''
+        if (trimmed.startsWith('start_time:')) currentClass.start_time = value
+        else if (trimmed.startsWith('end_time:')) currentClass.end_time = value
       }
     }
   }
@@ -222,9 +224,11 @@ function csesToConfig(csesStr) {
     while (schedule.length < targetCount) {
       schedule.push(createEmptySchedule())
     }
+    const CSES_DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
     for (const scheduleEntry of cses.schedules) {
       const dayIdx = scheduleEntry.enable_day - 1
       if (dayIdx < 0 || dayIdx > 6) continue
+      const dayKey = CSES_DAY_KEYS[dayIdx]
       const reg = /(\d{1,2}:\d{1,2})/
       const lessons = scheduleEntry.classes.map(item => ({
         name: item.subject,
@@ -240,12 +244,12 @@ function csesToConfig(csesStr) {
       const day = { pattern: patternIdx, lessons: lessons }
       if (scheduleEntry.weeks === 'all') {
         for (let j = 0; j < schedule.length; j++) {
-          schedule[j][WEEKDAYS[dayIdx]] = day
+          schedule[j][dayKey] = day
         }
       } else {
         const scheduleIdx = scheduleEntry.weeks === 'even' ? 1 : 0
         if (schedule[scheduleIdx]) {
-          schedule[scheduleIdx][WEEKDAYS[dayIdx]] = day
+          schedule[scheduleIdx][dayKey] = day
         }
       }
     }

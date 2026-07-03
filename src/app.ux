@@ -12,7 +12,7 @@ export default {
       const content = (data && data.data) || ""
       const ok = await applyConfigString(content, storage)
       if (ok) {
-        prompt.showToast({ message: "配置已更新 请重启软件", duration: 2000 })
+        prompt.showToast({ message: "配置已更新\n请重启软件", duration: 2000 })
       } else {
         prompt.showToast({ message: "配置格式不支持", duration: 2000 })
       }
