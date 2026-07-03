@@ -19,7 +19,7 @@
           <div if="{{$item.isDivider}}" class="divider-line"></div>
           <div
             else
-            class="lesson-item {{$item.active === 2 ? 'lesson-active' : ($item.active === 1 ? 'lesson-upcoming' : 'lesson-inactive')}}"
+            class="lesson-item {{$item.active === 2 ? 'lesson-active' : ($item.active === 1 ? 'lesson-upcoming' : '')}}"
           >
             <div class="lesson-content">
               <text class="lesson-name">{{ $item.name }}</text>
@@ -54,7 +54,7 @@
 
 .loading-text {
   font-size: 24px;
-  color: #888888;
+  color: #aaaaaa;
 }
 
 .empty-wrap {
@@ -66,7 +66,7 @@
 
 .empty-text {
   font-size: 24px;
-  color: #666666;
+  color: #aaaaaa;
 }
 
 .schedule-wrap {
@@ -95,7 +95,7 @@
 
 .date-display {
   font-size: 22px;
-  color: #888888;
+  color: #bbbbbb;
   margin-top: 2px;
 }
 
@@ -106,12 +106,12 @@
   padding: 8px 16px;
   margin: 4px 16px 10px;
   border-radius: 12px;
-  background-color: #1a1a1a;
+  background-color: #2a2a2a;
 }
 
 .countdown-text {
   font-size: 20px;
-  color: #cccccc;
+  color: #ffffff;
   text-align: center;
   lines: 2;
   text-overflow: ellipsis;
@@ -134,21 +134,15 @@
   padding: 0 16px;
   margin: 3px 16px;
   border-radius: 10px;
-  background-color: #1a1a1a;
+  background-color: #2a2a2a;
 }
 
 .lesson-active {
-  background-color: #1a3a1a;
   border: 2px solid #4caf50;
 }
 
 .lesson-upcoming {
-  background-color: #2a2a1a;
   border: 2px solid #ff9800;
-}
-
-.lesson-inactive {
-  background-color: #1a1a1a;
 }
 
 .lesson-content {
@@ -165,14 +159,14 @@
 
 .lesson-time {
   font-size: 17px;
-  color: #888888;
+  color: #aaaaaa;
   margin-top: 2px;
 }
 
 .divider-line {
   height: 2px;
   margin: 6px 24px;
-  background-color: #333333;
+  background-color: #444444;
 }
 
 .badge-now {
@@ -197,7 +191,7 @@
 
 .footer-text {
   font-size: 18px;
-  color: #666666;
+  color: #aaaaaa;
   text-decoration: underline;
 }
 </style>

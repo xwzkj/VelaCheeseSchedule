@@ -53,9 +53,9 @@
   margin-left: 36px;
   margin-right: 36px;
   padding: 14px 0;
-  background-color: #1a1a1a;
+  background-color: #2a2a2a;
   border-radius: 12px;
-  border: 2px solid #333333;
+  border: 2px solid #444444;
 }
 
 .selector-text {
@@ -72,9 +72,9 @@
   height: 128px;
   margin: 12px 16px 0 16px;
   padding: 8px 12px;
-  background-color: #1a1a1a;
+  background-color: #2a2a2a;
   border-radius: 12px;
-  border: 2px solid #333333;
+  border: 2px solid #444444;
 }
 
 .week-picker,
@@ -113,7 +113,7 @@
 
 .empty-text {
   font-size: 24px;
-  color: #666666;
+  color: #aaaaaa;
 }
 
 .lesson-item {
@@ -123,7 +123,7 @@
   padding: 10px 16px;
   margin: 3px 16px;
   border-radius: 10px;
-  background-color: #1a1a1a;
+  background-color: #2a2a2a;
 }
 
 .lesson-content {
@@ -138,14 +138,14 @@
 
 .lesson-time {
   font-size: 17px;
-  color: #888888;
+  color: #aaaaaa;
   margin-top: 2px;
 }
 
 .divider-line {
   height: 2px;
   margin: 6px 24px;
-  background-color: #333333;
+  background-color: #444444;
 }
 </style>
 
