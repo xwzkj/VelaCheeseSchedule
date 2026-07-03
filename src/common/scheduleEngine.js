@@ -128,7 +128,7 @@ function getCountdownText(lessons, timeOffset) {
         let remain = start - nowTime
         if (remain < 0) remain += 1440
         if (remain <= 0) return ''
-        return '距离' + lessons[i].name + '\n还有' + remain + '分钟'
+        return '课间休息\n还剩' + remain + '分钟'
       }
     }
   }
