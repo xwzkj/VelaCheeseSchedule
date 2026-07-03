@@ -99,9 +99,9 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 240px;
+  width: 90%;
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 20px;
   background-color: #2a2a2a;
 }
 
@@ -122,13 +122,13 @@
 
 .confirm-buttons {
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: space-around;
   width: 100%;
 }
 
 .confirm-btn {
   font-size: 16px;
-  padding: 8px 24px;
+  padding: 8px 12px;
   border-radius: 8px;
   text-align: center;
 }
@@ -175,7 +175,7 @@ export default {
   onUseDefault() {
     this.showConfirmDialog(
       "确认",
-      "确定要使用默认课表吗？当前课表将被覆盖。",
+      "当前课表将被覆盖，继续？",
       "useDefault"
     )
   },
@@ -183,7 +183,7 @@ export default {
   onClear() {
     this.showConfirmDialog(
       "确认清除",
-      "确定要清除课表配置吗？清除后将退出应用。",
+      "确定要清除课表配置吗？",
       "clear"
     )
   },
@@ -203,7 +203,7 @@ export default {
       })
       const ok = await applyConfigString(wrapper, storage)
       if (ok) {
-        prompt.showToast({ message: "默认课表已导入 请重启应用", duration: 1000 })
+        prompt.showToast({ message: "课表已导入\n请重启应用", duration: 1000 })
       } else {
         prompt.showToast({ message: "导入失败", duration: 1000 })
       }
@@ -211,7 +211,7 @@ export default {
       storage.delete({
         key: STORAGE_KEY,
         success: function() {
-          prompt.showToast({ message: "配置已清除 请重启应用", duration: 1000 })
+          prompt.showToast({ message: "配置已清除\n请重启应用", duration: 1000 })
         },
         fail: function(data, code) {
           console.error("scheduleEngine: storage.delete failed", data, code)
