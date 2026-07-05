@@ -5,3 +5,13 @@
 /dist
 /build
 .husky/
+
+# IDE / editor
+.vscode/
+.idea/
+*.iml
+
+# OS / logs
+*.log
+.DS_Store
+Thumbs.db
