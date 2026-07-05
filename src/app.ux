@@ -2,7 +2,7 @@
 import storage from "@system.storage"
 import interconnect from "@system.interconnect"
 import prompt from "@system.prompt"
-import { engine, init, applyConfigString } from "./common/scheduleEngine"
+import { init, applyConfigString } from "./common/scheduleEngine"
 
 export default {
   async onCreate() {
