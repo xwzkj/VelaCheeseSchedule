@@ -18,8 +18,9 @@
       <div class="countdown-bar">
         <text class="countdown-text">{{ countdownText }}</text>
       </div>
-      <scroll id="lessonScroll" scroll-y="true" class="lesson-scroll">
-        <block for="{{lessons}}" tid="id">
+      <div class="scroll-container">
+        <scroll id="lessonScroll" scroll-y="true" class="lesson-scroll">
+          <block for="{{lessons}}" tid="id">
           <div if="{{$item.isDivider}}" class="divider-line"></div>
           <div
             else
@@ -33,7 +34,8 @@
             <text elif="{{$item.active === 1}}" class="badge-next">下一节</text>
           </div>
         </block>
-      </scroll>
+        </scroll>
+      </div>
       <div class="bottom-bar" onclick="onFooterTap">
         <text class="footer-text">{{ footerLabel }}</text>
       </div>
@@ -123,11 +125,20 @@
 }
 
 /* 中间课程列表：占据剩余空间并独立滚动 */
-.lesson-scroll {
-  flex-direction: column;
+.scroll-container {
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0px;
+  position: relative;
+}
+
+.lesson-scroll {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  flex-direction: column;
   padding-bottom: 6px;
 }
 

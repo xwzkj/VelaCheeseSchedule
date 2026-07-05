@@ -19,20 +19,22 @@
         onchange="onDayChange"
       ></picker>
     </div>
-    <scroll scroll-y="true" class="lesson-scroll">
-      <div if="{{lessons.length === 0}}" class="empty-wrap">
-        <text class="empty-text">今日无课</text>
-      </div>
-      <block for="{{lessons}}" tid="id">
-        <div if="{{$item.isDivider}}" class="divider-line"></div>
-        <div else class="lesson-item">
-          <div class="lesson-content">
-            <text class="lesson-name">{{ $item.name }}</text>
-            <text class="lesson-time">{{ $item.time }}</text>
-          </div>
+    <div class="scroll-container">
+      <scroll scroll-y="true" class="lesson-scroll">
+        <div if="{{lessons.length === 0}}" class="empty-wrap">
+          <text class="empty-text">今日无课</text>
         </div>
-      </block>
-    </scroll>
+        <block for="{{lessons}}" tid="id">
+          <div if="{{$item.isDivider}}" class="divider-line"></div>
+          <div else class="lesson-item">
+            <div class="lesson-content">
+              <text class="lesson-name">{{ $item.name }}</text>
+              <text class="lesson-time">{{ $item.time }}</text>
+            </div>
+          </div>
+        </block>
+      </scroll>
+    </div>
     <div class="bottom-bar" onclick="onAboutTap">
       <image class="about-icon" src="/common/about.png"></image>
     </div>
@@ -98,12 +100,21 @@
   margin-left: 6px;
 }
 
-.lesson-scroll {
-  flex-direction: column;
+.scroll-container {
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0px;
+  position: relative;
   margin-top: 12px;
+}
+
+.lesson-scroll {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  flex-direction: column;
   padding-bottom: 48px;
 }
 
