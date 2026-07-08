@@ -2,6 +2,7 @@
 import storage from "@system.storage"
 import interconnect from "@system.interconnect"
 import prompt from "@system.prompt"
+import protocol from "./common/protocol.json"
 import { init, applyConfigString } from "./common/scheduleEngine"
 
 export default {
@@ -10,12 +11,37 @@ export default {
     const connect = interconnect.instance()
     connect.onmessage = async (data) => {
       const content = (data && data.data) || ""
-      const ok = await applyConfigString(content, storage)
-      if (ok) {
+      try {
+        // 回复手机发的心跳包
+        let wrapper = JSON.parse(content)
+        if (wrapper && wrapper.type === "heart-beat" && wrapper.version === protocol.version) {
+          connect.send({
+            data: {
+              version: protocol.version,
+              type: "heart-beat",
+              data: ""
+            }
+          })
+          return
+        }
+      } catch (e) {}
+      const result = await applyConfigString(content, storage)
+      let messageText
+      if (result && result.success) {
+        messageText = "配置已更新，请重启手环端软件"
         prompt.showToast({ message: "配置已更新\n请重启软件", duration: 2000 })
       } else {
-        prompt.showToast({ message: "配置格式不支持", duration: 2000 })
+        const reason = (result && result.reason) || "未知错误"
+        messageText = "同步失败：" + reason
+        prompt.showToast({ message: messageText, duration: 2000 })
       }
+      connect.send({
+        data: {
+          version: protocol.version,
+          type: "message",
+          data: messageText
+        }
+      })
     }
   },
   onDestroy() {

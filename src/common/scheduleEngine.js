@@ -1,3 +1,5 @@
+import protocol from './protocol.json'
+
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
 const DEFAULT_SETTING = {
@@ -5,6 +7,7 @@ const DEFAULT_SETTING = {
 }
 
 const STORAGE_KEY = 'configCache'
+const PROTOCOL_VERSION = protocol.version
 
 function createEmptyDay() {
   return { pattern: -1, lessons: [] }
@@ -156,65 +159,9 @@ function getCurrentScheduleId(firstWeekMonday, scheduleLength) {
   return ((diff % len) + len) % len
 }
 
-function csesParse(str) {
-  const lines = str.split('\n').filter(l => l.trim())
-  const result = { version: 1, subjects: [], schedules: [] }
-  let currentSection = ''
-  let currentSubject = null
-  let currentSchedule = null
-  let currentClass = null
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (trimmed.startsWith('version:')) {
-      result.version = parseInt(trimmed.split(':')[1].trim())
-    } else if (trimmed === 'subjects:') {
-      currentSection = 'subjects'
-    } else if (trimmed === 'schedules:') {
-      currentSection = 'schedules'
-    } else if (currentSection === 'subjects' && trimmed.startsWith('- name:')) {
-      if (currentSubject) result.subjects.push(currentSubject)
-      currentSubject = { name: '', simplified_name: '', room: '', teacher: '' }
-      currentSubject.name = trimmed.split(':')[1].trim().replace(/"/g, '')
-    } else if (currentSection === 'subjects' && currentSubject) {
-      if (trimmed.startsWith('simplified_name:')) currentSubject.simplified_name = trimmed.split(':')[1].trim().replace(/"/g, '')
-      else if (trimmed.startsWith('room:')) currentSubject.room = trimmed.split(':')[1].trim().replace(/"/g, '')
-      else if (trimmed.startsWith('teacher:')) currentSubject.teacher = trimmed.split(':')[1].trim().replace(/"/g, '')
-    } else if (currentSection === 'schedules' && trimmed.startsWith('- name:')) {
-      if (currentSchedule) {
-        if (currentClass) { currentSchedule.classes.push(currentClass); currentClass = null }
-        result.schedules.push(currentSchedule)
-      }
-      currentSchedule = { name: '', enable_day: 1, classes: [], weeks: null }
-      currentSchedule.name = trimmed.split(':')[1].trim().replace(/"/g, '')
-    } else if (currentSection === 'schedules' && currentSchedule) {
-      if (trimmed.startsWith('enable_day:')) {
-        currentSchedule.enable_day = parseInt(trimmed.split(':')[1].trim())
-      } else if (trimmed.startsWith('weeks:')) {
-        currentSchedule.weeks = trimmed.split(':')[1].trim()
-      } else if (trimmed.startsWith('- subject:')) {
-        if (currentClass) currentSchedule.classes.push(currentClass)
-        currentClass = { subject: '', start_time: '', end_time: '' }
-        currentClass.subject = trimmed.split(':')[1].trim().replace(/"/g, '')
-      } else if (currentClass) {
-        const colonIndex = trimmed.indexOf(':')
-        const value = colonIndex > -1 ? trimmed.substring(colonIndex + 1).trim().replace(/"/g, '') : ''
-        if (trimmed.startsWith('start_time:')) currentClass.start_time = value
-        else if (trimmed.startsWith('end_time:')) currentClass.end_time = value
-      }
-    }
-  }
-  if (currentSubject) result.subjects.push(currentSubject)
-  if (currentSchedule) {
-    if (currentClass) currentSchedule.classes.push(currentClass)
-    result.schedules.push(currentSchedule)
-  }
-  return result
-}
-
-function csesToConfig(csesStr) {
+function csesToConfig(cses) {
   try {
-    const cses = csesParse(csesStr)
-    if (!cses || cses.version !== 1) {
+    if (!cses || cses.version !== 1 || !Array.isArray(cses.subjects) || !Array.isArray(cses.schedules)) {
       return null
     }
     const patterns = []
@@ -303,43 +250,68 @@ function applyConfigObject(d) {
 function applyConfigString(str, storage) {
   return new Promise((resolve) => {
     if (!str || typeof str !== 'string') {
-      resolve(false)
+      resolve({ success: false, reason: '消息内容为空' })
       return
     }
     let wrapper
     try {
       wrapper = JSON.parse(str)
     } catch (e) {
-      resolve(false)
+      resolve({ success: false, reason: '消息不是有效的JSON' })
       return
     }
-    if (!wrapper || wrapper.version !== 1 || typeof wrapper.data !== 'string') {
-      resolve(false)
+    if (!wrapper || typeof wrapper !== 'object') {
+      resolve({ success: false, reason: '消息格式错误' })
+      return
+    }
+    if (wrapper.version !== PROTOCOL_VERSION) {
+      resolve({ success: false, reason: '通讯协议版本不匹配' })
+      return
+    }
+    if (!wrapper.type) {
+      resolve({ success: false, reason: '消息格式错误' })
       return
     }
     let configStr = ''
     if (wrapper.type === 'CSES') {
-      const config = csesToConfig(wrapper.data)
+      let csesData = wrapper.data
+      if (typeof csesData === 'string') {
+        try {
+          csesData = JSON.parse(csesData)
+        } catch (e) {
+          resolve({ success: false, reason: 'CSES数据未被转换成有效的JSON' })
+          return
+        }
+      }
+      if (!csesData || typeof csesData !== 'object') {
+        resolve({ success: false, reason: 'CSES数据格式错误' })
+        return
+      }
+      const config = csesToConfig(csesData)
       if (!config) {
-        resolve(false)
+        resolve({ success: false, reason: 'CSES数据转换失败' })
         return
       }
       configStr = JSON.stringify(config)
     } else if (wrapper.type === 'config') {
+      if (typeof wrapper.data !== 'string') {
+        resolve({ success: false, reason: '配置数据格式错误' })
+        return
+      }
       configStr = wrapper.data
     } else {
-      resolve(false)
+      resolve({ success: false, reason: '不支持的消息类型' })
       return
     }
     let obj
     try {
       obj = JSON.parse(configStr)
     } catch (e) {
-      resolve(false)
+      resolve({ success: false, reason: '配置内容解析失败' })
       return
     }
     if (!applyConfigObject(obj)) {
-      resolve(false)
+      resolve({ success: false, reason: '配置内容应用失败' })
       return
     }
     engine.today = getToday()
@@ -348,7 +320,7 @@ function applyConfigString(str, storage) {
     notifyListeners()
 
     if (!storage) {
-      resolve(true)
+      resolve({ success: true })
       return
     }
 
@@ -358,16 +330,16 @@ function applyConfigString(str, storage) {
         value: configStr,
         success: function() {
           notifyListeners()
-          resolve(true)
+          resolve({ success: true })
         },
         fail: function(data, code) {
           console.error('scheduleEngine: storage.set failed', data, code)
-          resolve(true)
+          resolve({ success: false, reason: '本地存储失败' })
         }
       })
     } catch (e) {
       console.error('scheduleEngine: storage.set exception', e)
-      resolve(true)
+      resolve({ success: false, reason: '本地存储异常' })
     }
   })
 }
