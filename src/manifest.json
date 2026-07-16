@@ -38,6 +38,9 @@
       "pages/detail": {
         "component": "detail"
       },
+      "pages/course-detail": {
+        "component": "course-detail"
+      },
       "pages/about": {
         "component": "about"
       },

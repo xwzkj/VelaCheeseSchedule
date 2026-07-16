@@ -25,6 +25,7 @@
           <div
             else
             class="lesson-item {{$item.active === 2 ? 'lesson-active' : ($item.active === 1 ? 'lesson-upcoming' : '')}}"
+            onclick="onLessonTap($idx)"
           >
             <div class="lesson-content">
               <text class="lesson-name">{{ $item.name }}</text>
@@ -300,6 +301,21 @@ export default {
     })
   },
 
+  onLessonTap(index) {
+    const lesson = this.lessons[index]
+    if (!lesson || lesson.isDivider) {
+      return
+    }
+    router.push({
+      uri: "/pages/course-detail",
+      params: {
+        scheduleId: engine.currentScheduleId,
+        dayKey: engine.today,
+        lessonIndex: index
+      }
+    })
+  },
+
   scrollToActive(activeIndex) {
     let targetIndex = Math.max(0, activeIndex - 1)
     while (targetIndex > 0 && this.lessons[targetIndex] && this.lessons[targetIndex].isDivider) {
@@ -324,7 +340,6 @@ export default {
   },
 
   refreshDisplay() {
-    console.log(this.lessons.length)
     const scheduleKey = [engine.currentScheduleId, engine.today, engine.scheduleOverride.date].join(
       "|"
     )

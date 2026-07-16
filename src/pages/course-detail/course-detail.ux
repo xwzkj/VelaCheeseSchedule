@@ -1,0 +1,425 @@
+<template>
+  <div class="page-container" onswipe="onSwipe">
+    <div if="{{!loaded}}" class="loading-wrap">
+      <text class="loading-text">加载中...</text>
+    </div>
+    <div else class="content-area">
+      <div class="top-section">
+        <text class="time-display">{{ currentTime }}</text>
+        <text class="date-display">{{ dateLabel }}</text>
+      </div>
+      <div class="course-card">
+        <div class="card-header">
+          <text class="course-name">{{ name }}</text>
+          <text if="{{active === 2}}" class="status-badge status-badge--active">上课中</text>
+          <text elif="{{active === 1}}" class="status-badge status-badge--upcoming">即将上课</text>
+          <text else class="status-badge status-badge--inactive">非活跃课程</text>
+        </div>
+        <text class="course-time">{{ time }}</text>
+        <div class="progress-section">
+          <div class="progress-track">
+            <div class="progress-fill" style="width: {{ progressPercent }}%"></div>
+          </div>
+          <text class="progress-text">{{ progressPercent }}%</text>
+        </div>
+        <div class="info-row">
+          <text class="info-label">教室</text>
+          <text class="info-value">北楼二层A-101室</text>
+        </div>
+        <div if="{{active !== 0}}" class="card-divider"></div>
+        <div if="{{remainText}}" class="remain-section">
+          <text class="remain-text">{{ remainText }}</text>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+.page-container {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+}
+
+.loading-wrap {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.loading-text {
+  font-size: 24px;
+  color: #aaaaaa;
+}
+
+.top-section {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 16px 0 4px 0;
+}
+
+.time-display {
+  font-size: 36px;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.date-display {
+  font-size: 22px;
+  color: #bbbbbb;
+  margin-top: 2px;
+}
+
+.content-area {
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+  padding: 0 36px;
+}
+
+.course-card {
+  flex-direction: column;
+  width: 100%;
+  padding: 24px;
+  border-radius: 16px;
+  background-color: #1a1a1a;
+}
+
+.card-header {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.course-name {
+  font-size: 28px;
+  color: #ffffff;
+  font-weight: bold;
+  lines: 1;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+}
+
+.status-badge {
+  font-size: 15px;
+  font-weight: bold;
+  color: #ffffff;
+  padding: 5px 9px;
+  border-radius: 8px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.status-badge--active {
+  background-color: #4caf50;
+}
+
+.status-badge--upcoming {
+  background-color: #ff9800;
+}
+
+.status-badge--inactive {
+  background-color: #666666;
+}
+
+.course-time {
+  font-size: 20px;
+  color: #888888;
+  margin-top: 14px;
+}
+
+.progress-section {
+  flex-direction: row;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.progress-track {
+  height: 8px;
+  flex-grow: 1;
+  background-color: #333333;
+  border-radius: 4px;
+}
+
+.progress-fill {
+  height: 8px;
+  background-color: #4caf50;
+  border-radius: 4px;
+}
+
+.progress-text {
+  font-size: 18px;
+  color: #aaaaaa;
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
+.card-divider {
+  height: 1px;
+  margin-top: 18px;
+  background-color: #333333;
+}
+
+.info-row {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.info-label {
+  font-size: 20px;
+  color: #888888;
+}
+
+.info-value {
+  font-size: 20px;
+  color: #ffffff;
+}
+
+.remain-section {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.remain-text {
+  font-size: 20px;
+  color: #ffffff;
+  text-align: center;
+}
+
+/* 窄屏/跑道屏适配：宽度 <= 150dp 时使用更紧凑布局（336px 宽屏约 168dp，212px 窄屏约 106dp） */
+@media (max-width: 150) {
+  .content-area {
+    padding: 0 16px;
+  }
+
+  .course-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .course-name {
+    font-size: 22px;
+  }
+
+  .status-badge {
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    margin-left: 6px;
+  }
+
+  .course-time {
+    font-size: 16px;
+    margin-top: 8px;
+  }
+
+  .progress-section {
+    margin-top: 12px;
+  }
+
+  .progress-track {
+    height: 6px;
+  }
+
+  .progress-fill {
+    height: 6px;
+  }
+
+  .progress-text {
+    font-size: 14px;
+    margin-left: 8px;
+  }
+
+  .card-divider {
+    margin-top: 12px;
+  }
+
+  .info-row {
+    justify-content: center;
+    margin-top: 12px;
+  }
+
+  .info-label {
+    display: none;
+  }
+
+  .info-value {
+    font-size: 16px;
+    text-align: center;
+  }
+
+  .remain-section {
+    margin-top: 12px;
+  }
+
+  .remain-text {
+    font-size: 16px;
+  }
+}
+</style>
+
+<script>
+import router from "@system.router"
+import storage from "@system.storage"
+import { engine, init, getScheduleToday } from "../../common/scheduleEngine"
+
+const TIME_REX = /^(\d{1,2})[：:](\d{1,2})[-~ ]+(\d{1,2})[：:](\d{1,2})$/
+
+function getMinutesNow(offset) {
+  const now = new Date()
+  return now.getHours() * 60 + now.getMinutes() + (offset / 60)
+}
+
+function parseTime(time) {
+  const m = TIME_REX.exec(time)
+  if (!m) return null
+  return {
+    start: parseInt(m[1]) * 60 + parseInt(m[2]),
+    end: parseInt(m[3]) * 60 + parseInt(m[4])
+  }
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value))
+}
+
+export default {
+  protected: {
+    scheduleId: 0,
+    dayKey: "",
+    lessonIndex: 0
+  },
+
+  private: {
+    name: "",
+    time: "",
+    active: 0,
+    loaded: false,
+    currentTime: "",
+    dateLabel: "",
+    progressPercent: 0,
+    remainText: "",
+    _timer: null
+  },
+
+  async onInit() {
+    if (!engine.inited) {
+      await init(storage)
+    }
+    this.scheduleId = parseInt(this.scheduleId, 10) || 0
+    this.dayKey = this.dayKey || ""
+    this.lessonIndex = parseInt(this.lessonIndex, 10) || 0
+    this.loadLesson()
+  },
+
+  onShow() {
+    if (this._timer) {
+      clearInterval(this._timer)
+      this._timer = null
+    }
+    const tryLoad = () => {
+      this.loadLesson()
+      this.refreshDisplay()
+      if (this.time && !this.loaded) {
+        this.loaded = true
+      }
+    }
+    this._timer = setInterval(tryLoad, 1000)
+    setTimeout(tryLoad, 100)
+  },
+
+  onHide() {
+    if (this._timer) {
+      clearInterval(this._timer)
+      this._timer = null
+    }
+  },
+
+  onDestroy() {
+    if (this._timer) {
+      clearInterval(this._timer)
+      this._timer = null
+    }
+  },
+
+  onSwipe(e) {
+    if (e && e.direction === "right") {
+      router.back()
+    }
+  },
+
+  loadLesson() {
+    const daySchedule = engine.schedule[this.scheduleId] && engine.schedule[this.scheduleId][this.dayKey]
+    if (!daySchedule) {
+      return
+    }
+    const lessons = getScheduleToday(
+      engine.schedule,
+      this.scheduleId,
+      this.dayKey,
+      engine.scheduleOverride
+    )
+    const lesson = lessons[this.lessonIndex]
+    if (lesson) {
+      this.name = lesson.name || ""
+      this.time = lesson.time || ""
+    }
+    const rawLesson = daySchedule.lessons[this.lessonIndex]
+    if (rawLesson) {
+      this.active = parseInt(rawLesson.active, 10) || 0
+    }
+  },
+
+  refreshDisplay() {
+    const now = new Date()
+    this.currentTime =
+      String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0")
+    this.dateLabel = now.getMonth() + 1 + "/" + now.getDate()
+
+    const timeInfo = parseTime(this.time)
+    if (!timeInfo) {
+      this.progressPercent = 0
+      this.remainText = ""
+      return
+    }
+
+    const nowMinutes = getMinutesNow(engine.setting.timeOffset || 0)
+    let percent = 0
+    let remain = 0
+    let remainText = ""
+
+    if (this.active === 2) {
+      let passed = nowMinutes - timeInfo.start
+      if (passed < 0) passed += 1440
+      const duration = timeInfo.end - timeInfo.start
+      const totalDuration = duration > 0 ? duration : duration + 1440
+      percent = Math.round((passed / totalDuration) * 100)
+      let remainMinutes = timeInfo.end - nowMinutes
+      if (remainMinutes < 0) remainMinutes += 1440
+      remain = remainMinutes
+      remainText = "还剩" + remain + "分钟下课"
+    } else if (this.active === 1) {
+      percent = 0
+      let remainMinutes = timeInfo.start - nowMinutes
+      if (remainMinutes < 0) remainMinutes += 1440
+      remain = remainMinutes
+      remainText = remain + "分钟后上课"
+    } else {
+      percent = 0
+      remainText = ""
+    }
+
+    this.progressPercent = clamp(percent, 0, 100)
+    this.remainText = remainText
+  }
+}
+</script>
