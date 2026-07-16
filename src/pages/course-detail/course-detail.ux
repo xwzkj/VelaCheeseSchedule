@@ -335,7 +335,7 @@ export default {
       }
     }
     this._timer = setInterval(tryLoad, 1000)
-    setTimeout(tryLoad, 100)
+    setTimeout(tryLoad, 200)
   },
 
   onHide() {
