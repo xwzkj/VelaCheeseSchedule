@@ -1,0 +1,221 @@
+<template>
+  <div class="page-container" onswipe="onSwipe">
+    <text class="page-title">设置</text>
+    <div class="btn-group">
+      <text class="setting-btn" onclick="onFirstWeek">起始周设置</text>
+      <text class="setting-btn" onclick="onUseDefault">使用默认课表</text>
+      <text class="danger-btn" onclick="onClear">清除课表配置</text>
+    </div>
+    <div if="{{showConfirm}}" class="confirm-mask">
+      <div class="confirm-dialog">
+        <text class="confirm-title">{{confirmTitle}}</text>
+        <text class="confirm-message">{{confirmMessage}}</text>
+        <div class="confirm-buttons">
+          <text class="confirm-btn cancel" onclick="onCancel">取消</text>
+          <text class="confirm-btn ok" onclick="onConfirm">确定</text>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+.page-container {
+  position: relative;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding-top: 48px;
+  padding-bottom: 48px;
+  background-color: #000000;
+}
+
+.page-title {
+  font-size: 28px;
+  color: #ffffff;
+  font-weight: bold;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.btn-group {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+  margin-left: 36px;
+  margin-right: 36px;
+}
+
+.setting-btn,
+.danger-btn {
+  width: 100%;
+  font-size: 18px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.setting-btn {
+  color: #000000;
+  background-color: #d9d9d9;
+}
+
+.danger-btn {
+  color: #ff6b6b;
+  background-color: #d9d9d9;
+  margin-bottom: 0;
+}
+
+.confirm-mask {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.confirm-dialog {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 90%;
+  padding: 16px;
+  border-radius: 16px;
+  background-color: #2a2a2a;
+}
+
+.confirm-title {
+  font-size: 20px;
+  color: #ffffff;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.confirm-message {
+  font-size: 16px;
+  color: #aaaaaa;
+  text-align: center;
+  margin-bottom: 16px;
+  lines: 3;
+}
+
+.confirm-buttons {
+  flex-direction: row;
+  justify-content: space-around;
+  width: 100%;
+}
+
+.confirm-btn {
+  width: 40%;
+  font-size: 16px;
+  padding: 8px 0;
+  border-radius: 8px;
+  text-align: center;
+  lines: 1;
+}
+
+.confirm-btn.cancel {
+  color: #aaaaaa;
+  background-color: #1a1a1a;
+}
+
+.confirm-btn.ok {
+  color: #000000;
+  background-color: #ffffff;
+}
+</style>
+
+<script>
+import router from "@system.router"
+import prompt from "@system.prompt"
+import storage from "@system.storage"
+import defaultConfig from "../../common/config.json"
+import protocol from "../../common/protocol.json"
+import { applyConfigString, STORAGE_KEY } from "../../common/scheduleEngine"
+
+export default {
+  private: {
+    showConfirm: false,
+    confirmTitle: "",
+    confirmMessage: "",
+    confirmAction: ""
+  },
+
+  onSwipe(e) {
+    if (e && e.direction === "right") {
+      router.back()
+    }
+  },
+
+  onFirstWeek() {
+    router.push({
+      uri: "/pages/setting-first-week"
+    })
+  },
+
+  showConfirmDialog(title, message, action) {
+    this.confirmTitle = title
+    this.confirmMessage = message
+    this.confirmAction = action
+    this.showConfirm = true
+  },
+
+  onUseDefault() {
+    this.showConfirmDialog(
+      "确认",
+      "当前课表将被覆盖，继续？",
+      "useDefault"
+    )
+  },
+
+  onClear() {
+    this.showConfirmDialog(
+      "确认清除",
+      "确定要清除课表配置吗？",
+      "clear"
+    )
+  },
+
+  onCancel() {
+    this.showConfirm = false
+  },
+
+  async onConfirm() {
+    this.showConfirm = false
+    if (this.confirmAction === "useDefault") {
+      const configStr = JSON.stringify(defaultConfig)
+      const wrapper = JSON.stringify({
+        version: protocol.version,
+        type: "config",
+        data: configStr
+      })
+      const result = await applyConfigString(wrapper, storage)
+      if (result && result.success) {
+        prompt.showToast({ message: "课表已导入\n请重启应用", duration: 1000 })
+      } else {
+        const reason = (result && result.reason) || "未知错误"
+        prompt.showToast({ message: "导入失败：" + reason, duration: 1000 })
+      }
+    } else if (this.confirmAction === "clear") {
+      storage.delete({
+        key: STORAGE_KEY,
+        success: function() {
+          prompt.showToast({ message: "配置已清除\n请重启应用", duration: 1000 })
+        },
+        fail: function(data, code) {
+          console.error("scheduleEngine: storage.delete failed", data, code)
+          prompt.showToast({ message: "清除失败", duration: 1000 })
+        }
+      })
+    }
+  }
+}
+</script>

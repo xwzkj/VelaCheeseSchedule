@@ -40,6 +40,12 @@
       },
       "pages/about": {
         "component": "about"
+      },
+      "pages/setting": {
+        "component": "setting"
+      },
+      "pages/setting-first-week": {
+        "component": "setting-first-week"
       }
     }
   },

@@ -1,0 +1,120 @@
+<template>
+  <div class="page-container" onswipe="onSwipe">
+    <text class="page-title">设置起始周</text>
+    <div class="setting-card">
+      <text class="setting-desc">选择本周的课表</text>
+      <picker
+        type="text"
+        class="week-picker"
+        range="{{weekOptions}}"
+        selected="{{selectedIndex}}"
+        onchange="onWeekChange"
+      ></picker>
+    </div>
+  </div>
+</template>
+
+<style>
+.page-container {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding-top: 48px;
+  padding-bottom: 48px;
+  padding-left: 16px;
+  padding-right: 16px;
+  background-color: #000000;
+}
+
+.page-title {
+  font-size: 28px;
+  color: #ffffff;
+  font-weight: bold;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.setting-card {
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  background-color: #2a2a2a;
+}
+
+.setting-desc {
+  font-size: 18px;
+  color: #999999;
+  margin-bottom: 4px;
+}
+
+.week-picker {
+  width: 140px;
+  flex-grow: 1;
+  height: 0;
+  font-size: 20px;
+  selected-font-size: 22px;
+  color: #ffffff;
+  selected-color: #ce9e04;
+  text-align: center;
+  border-radius: 12px;
+  border: 2px solid #444444;
+}
+
+</style>
+
+<script>
+import router from "@system.router"
+import prompt from "@system.prompt"
+import storage from "@system.storage"
+import { engine, init, setFirstWeek, save } from "../../common/scheduleEngine"
+
+export default {
+  private: {
+    weekOptions: [],
+    selectedIndex: 0
+  },
+
+  async onInit() {
+    if (!engine.inited) {
+      await init(storage)
+    }
+    this.buildOptions()
+    this.selectedIndex = engine.currentScheduleId
+  },
+
+  onShow() {
+    this.selectedIndex = engine.currentScheduleId
+  },
+
+  buildOptions() {
+    const totalWeeks = Math.max(engine.schedule.length, 1)
+    const options = []
+    for (let i = 0; i < totalWeeks; i++) {
+      options.push("课表" + (i + 1))
+    }
+    this.weekOptions = options
+  },
+
+  onSwipe(e) {
+    if (e && e.direction === "right") {
+      router.back()
+    }
+  },
+
+  async onWeekChange(e) {
+    if (!e) return
+    const newIndex = e.newSelected
+    setFirstWeek(newIndex)
+    this.selectedIndex = engine.currentScheduleId
+    const saved = await save(storage)
+    if (saved) {
+      prompt.showToast({ message: "已设置", duration: 1000 })
+    } else {
+      prompt.showToast({ message: "保存失败", duration: 1000 })
+    }
+  }
+}
+</script>

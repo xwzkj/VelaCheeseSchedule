@@ -392,9 +392,43 @@ function init(storage) {
   })
 }
 
-function save() {
-  notifyListeners()
-  return Promise.resolve(true)
+function getConfigObject() {
+  return {
+    version: 1,
+    setting: engine.setting,
+    patterns: engine.patterns,
+    schedule: engine.schedule,
+    scheduleOverride: engine.scheduleOverride,
+    firstWeekMonday: engine.firstWeekMonday
+  }
+}
+
+function save(storage) {
+  return new Promise((resolve) => {
+    notifyListeners()
+    if (!storage) {
+      resolve(true)
+      return
+    }
+    const configStr = JSON.stringify(getConfigObject())
+    // console.log(JSON.parse(configStr))
+    try {
+      storage.set({
+        key: STORAGE_KEY,
+        value: configStr,
+        success: function() {
+          resolve(true)
+        },
+        fail: function(data, code) {
+          console.error('scheduleEngine: storage.set failed', data, code)
+          resolve(false)
+        }
+      })
+    } catch (e) {
+      console.error('scheduleEngine: storage.set exception', e)
+      resolve(false)
+    }
+  })
 }
 
 function notifyListeners() {
