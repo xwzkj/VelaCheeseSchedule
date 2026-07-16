@@ -87,7 +87,7 @@
   width: 100%;
   padding: 24px;
   border-radius: 16px;
-  background-color: #1a1a1a;
+  background-color: #2a2a2a;
 }
 
 .card-header {
@@ -120,7 +120,7 @@
 }
 
 .status-badge--upcoming {
-  background-color: #ff9800;
+  background-color: #e65100;
 }
 
 .status-badge--inactive {
@@ -129,7 +129,7 @@
 
 .course-time {
   font-size: 20px;
-  color: #888888;
+  color: #aaaaaa;
   margin-top: 14px;
 }
 
@@ -174,7 +174,7 @@
 
 .info-label {
   font-size: 20px;
-  color: #888888;
+  color: #aaaaaa;
 }
 
 .info-value {
