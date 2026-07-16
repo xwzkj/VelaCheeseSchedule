@@ -270,7 +270,7 @@
 <script>
 import router from "@system.router"
 import storage from "@system.storage"
-import { engine, init, getScheduleToday } from "../../common/scheduleEngine"
+import { engine, init, startTimers, stopTimers, getScheduleToday } from "../../common/scheduleEngine"
 
 const TIME_REX = /^(\d{1,2})[：:](\d{1,2})[-~ ]+(\d{1,2})[：:](\d{1,2})$/
 
@@ -326,6 +326,7 @@ export default {
       clearInterval(this._timer)
       this._timer = null
     }
+    startTimers()
     const tryLoad = () => {
       this.loadLesson()
       this.refreshDisplay()
@@ -342,6 +343,7 @@ export default {
       clearInterval(this._timer)
       this._timer = null
     }
+    stopTimers()
   },
 
   onDestroy() {
@@ -349,6 +351,7 @@ export default {
       clearInterval(this._timer)
       this._timer = null
     }
+    stopTimers()
   },
 
   onSwipe(e) {
