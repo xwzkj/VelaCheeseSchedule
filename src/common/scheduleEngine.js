@@ -1,3 +1,6 @@
+/// <reference path="./types.d.ts" />
+/// <reference path="./cses.d.ts" />
+
 import protocol from './protocol.json'
 
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
@@ -9,14 +12,39 @@ const DEFAULT_SETTING = {
 const STORAGE_KEY = 'configCache'
 const PROTOCOL_VERSION = protocol.version
 
+/**
+ * 创建一个空的每日课程表结构
+ * @returns {Day}
+ */
 function createEmptyDay() {
   return { pattern: -1, lessons: [] }
 }
 
+/**
+ * 创建一个空的周课程表结构
+ * @returns {Schedule}
+ */
 function createEmptySchedule() {
   return { mon: createEmptyDay(), tue: createEmptyDay(), wed: createEmptyDay(), thu: createEmptyDay(), fri: createEmptyDay(), sat: createEmptyDay(), sun: createEmptyDay() }
 }
 
+/**
+ * 课程表引擎核心状态
+ * @typedef {Object} EngineState
+ * @property {{ timeOffset: number }} setting - 引擎设置
+ * @property {boolean} inited - 是否已完成初始化
+ * @property {Week|string} today - 今天是星期几
+ * @property {Pattern[]} patterns - 时间模式列表
+ * @property {Schedule[]} schedule - 所有课程表
+ * @property {string} firstWeekMonday - 第一周周一的日期（YYYY-MM-DD）
+ * @property {number} currentScheduleId - 当前使用的课程表索引
+ * @property {{ date: string, override: string[] }} scheduleOverride - 当日课程临时覆盖配置
+ * @property {any} _todayTimer - 日期更新定时器
+ * @property {any} _activeTimer - 课程状态刷新定时器
+ * @property {Array<() => void>} _listeners - 配置更新监听器
+ */
+
+/** @type {EngineState} */
 const engine = {
   setting: { ...DEFAULT_SETTING },
   inited: false,
@@ -32,15 +60,29 @@ const engine = {
   _listeners: []
 }
 
+/**
+ * 获取今天是星期几
+ * @returns {Week}
+ */
 function getToday() {
   return WEEKDAYS[new Date().getDay()]
 }
 
+/**
+ * 将日期格式化为 YYYY-MM-DD
+ * @param {Date} [d]
+ * @returns {string}
+ */
 function formatDate(d) {
   const date = d || new Date()
   return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0')
 }
 
+/**
+ * 获取指定日期所在周的周一
+ * @param {Date|string} date
+ * @returns {Date}
+ */
 function getMonday(date) {
   const d = new Date(date)
   const day = d.getDay()
@@ -50,17 +92,35 @@ function getMonday(date) {
   return d
 }
 
+/**
+ * 计算两个日期之间相差的周数
+ * @param {string} d1
+ * @param {string} d2
+ * @returns {number}
+ */
 function getWeekDiff(d1, d2) {
   const a = getMonday(new Date(d1))
   const b = getMonday(new Date(d2))
   return Math.round((a - b) / (7 * 24 * 60 * 60 * 1000))
 }
 
+/**
+ * 获取当前时间加上偏移后的分钟数
+ * @param {number} offset
+ * @returns {number}
+ */
 function getMinutesNow(offset) {
   const now = new Date()
   return (now.getHours() * 60 + now.getMinutes()) + (offset / 60)
 }
 
+/**
+ * 判断某节课的当前状态
+ * @param {string} time - 课程时间范围，例如 "08:00-09:00"
+ * @param {string|null} lastTime - 上一节课的时间范围
+ * @param {number} timeOffset - 时间偏移量（秒）
+ * @returns {0 | 1 | 2} 0:不是当前课程，1:当前为课间/下一节是该课程，2:是当前课程
+ */
 function isActiveTime(time, lastTime, timeOffset) {
   const nowTime = getMinutesNow(timeOffset)
   const rex = /^(\d{1,2})[：:](\d{1,2})[-~ ]+(\d{1,2})[：:](\d{1,2})$/
@@ -91,6 +151,14 @@ function isActiveTime(time, lastTime, timeOffset) {
   return flag
 }
 
+/**
+ * 获取今日课程列表，并应用临时覆盖
+ * @param {Schedule[]} schedule
+ * @param {number} scheduleId
+ * @param {Week} today
+ * @param {{ date: string, override: string[] }} override
+ * @returns {Lesson[]}
+ */
 function getScheduleToday(schedule, scheduleId, today, override) {
   const daySchedule = schedule[scheduleId]
   if (!daySchedule || !daySchedule[today]) return []
@@ -106,6 +174,12 @@ function getScheduleToday(schedule, scheduleId, today, override) {
   return daySchedule[today].lessons
 }
 
+/**
+ * 获取倒计时文本
+ * @param {Lesson[]} lessons
+ * @param {number} timeOffset
+ * @returns {string}
+ */
 function getCountdownText(lessons, timeOffset) {
   const nowTime = getMinutesNow(timeOffset)
   const rex = /^(\d{1,2})[：:](\d{1,2})[-~ ]+(\d{1,2})[：:](\d{1,2})$/
@@ -138,6 +212,10 @@ function getCountdownText(lessons, timeOffset) {
   return '当前没有课程'
 }
 
+/**
+ * 刷新今日课程的高亮状态
+ * @returns {void}
+ */
 function refreshActiveState() {
   const todayLessons = getScheduleToday(engine.schedule, engine.currentScheduleId, engine.today, engine.scheduleOverride)
   const scheduleDay = engine.schedule[engine.currentScheduleId]
@@ -152,6 +230,12 @@ function refreshActiveState() {
   }
 }
 
+/**
+ * 根据第一周周一日期计算当前应使用的课程表索引
+ * @param {string} firstWeekMonday
+ * @param {number} scheduleLength
+ * @returns {number}
+ */
 function getCurrentScheduleId(firstWeekMonday, scheduleLength) {
   if (!firstWeekMonday) return 0
   const diff = getWeekDiff(new Date(), firstWeekMonday)
@@ -159,6 +243,11 @@ function getCurrentScheduleId(firstWeekMonday, scheduleLength) {
   return ((diff % len) + len) % len
 }
 
+/**
+ * 将 CSES 格式数据转换为引擎内部配置
+ * @param {CSES} cses
+ * @returns {{ version: number, setting: { timeOffset: number }, patterns: Pattern[], schedule: Schedule[], scheduleOverride: { date: string, override: string[] }, firstWeekMonday: string } | null}
+ */
 function csesToConfig(cses) {
   try {
     if (!cses || cses.version !== 1 || !Array.isArray(cses.subjects) || !Array.isArray(cses.schedules)) {
@@ -216,6 +305,11 @@ function csesToConfig(cses) {
   }
 }
 
+/**
+ * 根据当前周数设置第一周周一的日期
+ * @param {number} currentWeekNumber
+ * @returns {void}
+ */
 function setFirstWeek(currentWeekNumber) {
   const thisMonday = getMonday(new Date())
   thisMonday.setDate(thisMonday.getDate() - currentWeekNumber * 7)
@@ -223,6 +317,11 @@ function setFirstWeek(currentWeekNumber) {
   engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
 }
 
+/**
+ * 将配置对象应用到引擎状态
+ * @param {any} d
+ * @returns {boolean}
+ */
 function applyConfigObject(d) {
   if (!d) return false
   try {
@@ -247,6 +346,12 @@ function applyConfigObject(d) {
   return true
 }
 
+/**
+ * 解析并应用配置字符串
+ * @param {string} str
+ * @param {any} storage
+ * @returns {Promise<{ success: boolean, reason?: string }>}
+ */
 function applyConfigString(str, storage) {
   return new Promise((resolve) => {
     if (!str || typeof str !== 'string') {
@@ -344,6 +449,11 @@ function applyConfigString(str, storage) {
   })
 }
 
+/**
+ * 初始化引擎
+ * @param {any} storage
+ * @returns {Promise<void>}
+ */
 function init(storage) {
   return new Promise((resolve) => {
     if (engine.inited) {
@@ -392,6 +502,10 @@ function init(storage) {
   })
 }
 
+/**
+ * 获取当前引擎配置对象
+ * @returns {{ version: number, setting: { timeOffset: number }, patterns: Pattern[], schedule: Schedule[], scheduleOverride: { date: string, override: string[] }, firstWeekMonday: string }}
+ */
 function getConfigObject() {
   return {
     version: 1,
@@ -403,6 +517,11 @@ function getConfigObject() {
   }
 }
 
+/**
+ * 保存当前配置到本地存储
+ * @param {any} storage
+ * @returns {Promise<boolean>}
+ */
 function save(storage) {
   return new Promise((resolve) => {
     notifyListeners()
@@ -431,12 +550,21 @@ function save(storage) {
   })
 }
 
+/**
+ * 通知所有更新监听器
+ * @returns {void}
+ */
 function notifyListeners() {
   for (const fn of engine._listeners) {
     try { fn() } catch (e) {}
   }
 }
 
+/**
+ * 注册配置更新监听器
+ * @param {() => void} fn
+ * @returns {() => void} 取消监听的函数
+ */
 function onUpdate(fn) {
   engine._listeners.push(fn)
   return function () {
@@ -445,6 +573,10 @@ function onUpdate(fn) {
   }
 }
 
+/**
+ * 启动日期与课程状态定时刷新
+ * @returns {void}
+ */
 function startTimers() {
   engine.today = getToday()
   refreshActiveState()
@@ -457,6 +589,10 @@ function startTimers() {
   engine._activeTimer = setInterval(refreshActiveState, 500)
 }
 
+/**
+ * 停止所有定时器
+ * @returns {void}
+ */
 function stopTimers() {
   if (engine._todayTimer) {
     clearInterval(engine._todayTimer)
