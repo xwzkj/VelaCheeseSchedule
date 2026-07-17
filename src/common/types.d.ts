@@ -9,7 +9,9 @@ type Lesson = {
     name: string,
     time: string,
     active?: 0 | 1 | 2, // 0:不是当前课程，1:当前为课间，下一节是该课程，2:是当前课程
-    isDivider: boolean
+    isDivider: boolean,
+    room?: string,
+    teacher?: string
 }
 type Day = {
     pattern: number,

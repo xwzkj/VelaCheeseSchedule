@@ -266,11 +266,16 @@ function csesToConfig(cses) {
       if (dayIdx < 0 || dayIdx > 6) continue
       const dayKey = CSES_DAY_KEYS[dayIdx]
       const reg = /(\d{1,2}:\d{1,2})/
-      const lessons = scheduleEntry.classes.map(item => ({
-        name: item.subject,
-        time: (reg.exec(item.start_time)?.[1] || '') + '-' + (reg.exec(item.end_time)?.[1] || ''),
-        isDivider: false
-      }))
+      const lessons = scheduleEntry.classes.map(item => {
+        const subject = cses.subjects.find(s => s.name === item.subject)
+        return {
+          name: item.subject,
+          time: (reg.exec(item.start_time)?.[1] || '') + '-' + (reg.exec(item.end_time)?.[1] || ''),
+          isDivider: false,
+          room: subject?.room,
+          teacher: subject?.teacher
+        }
+      })
       const newPattern = lessons.map(item => ({ isDivider: false, time: item.time }))
       let patternIdx = patterns.findIndex(p => JSON.stringify(p.data) === JSON.stringify(newPattern))
       if (patternIdx === -1) {

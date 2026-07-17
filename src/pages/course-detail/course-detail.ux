@@ -24,7 +24,11 @@
         </div>
         <div class="info-row">
           <text class="info-label">教室</text>
-          <text class="info-value">北楼二层A-101室</text>
+          <text class="info-value">{{ room }}</text>
+        </div>
+        <div class="info-row">
+          <text class="info-label">教师</text>
+          <text class="info-value">{{ teacher }}</text>
         </div>
         <div if="{{active !== 0}}" class="card-divider"></div>
         <div if="{{remainText}}" class="remain-section">
@@ -162,7 +166,7 @@
 .card-divider {
   height: 1px;
   margin-top: 18px;
-  background-color: #333333;
+  background-color: #555555;
 }
 
 .info-row {
@@ -308,6 +312,8 @@ export default {
     dateLabel: "",
     progressPercent: 0,
     remainText: "",
+    room: "",
+    teacher: "",
     _timer: null
   },
 
@@ -375,6 +381,8 @@ export default {
     if (lesson) {
       this.name = lesson.name || ""
       this.time = lesson.time || ""
+      this.room = (lesson.room || "").trim() || "未知教室"
+      this.teacher = (lesson.teacher || "").trim() || "未知教师"
     }
     const rawLesson = daySchedule.lessons[this.lessonIndex]
     if (rawLesson) {
