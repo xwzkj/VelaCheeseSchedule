@@ -83,14 +83,14 @@
   flex-direction: column;
   align-items: center;
   flex-grow: 1;
-  padding: 0 36px;
+  padding: 0 16px;
 }
 
 .course-card {
   flex-direction: column;
   width: 100%;
-  padding: 24px;
-  border-radius: 16px;
+  padding: 16px;
+  border-radius: 12px;
   background-color: #2a2a2a;
 }
 
@@ -101,7 +101,7 @@
 }
 
 .course-name {
-  font-size: 28px;
+  font-size: 22px;
   color: #ffffff;
   font-weight: bold;
   lines: 1;
@@ -110,12 +110,12 @@
 }
 
 .status-badge {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: bold;
   color: #ffffff;
-  padding: 5px 9px;
-  border-radius: 8px;
-  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-left: 6px;
   flex-shrink: 0;
 }
 
@@ -132,141 +132,143 @@
 }
 
 .course-time {
-  font-size: 20px;
+  font-size: 16px;
   color: #aaaaaa;
-  margin-top: 14px;
+  margin-top: 8px;
 }
 
 .progress-section {
   flex-direction: row;
   align-items: center;
-  margin-top: 18px;
+  margin-top: 12px;
 }
 
 .progress-track {
-  height: 8px;
+  height: 6px;
   flex-grow: 1;
   background-color: #333333;
   border-radius: 4px;
 }
 
 .progress-fill {
-  height: 8px;
+  height: 6px;
   background-color: #4caf50;
   border-radius: 4px;
 }
 
 .progress-text {
-  font-size: 18px;
+  font-size: 14px;
   color: #aaaaaa;
-  margin-left: 10px;
+  margin-left: 8px;
   flex-shrink: 0;
 }
 
 .card-divider {
   height: 1px;
-  margin-top: 18px;
+  margin-top: 12px;
   background-color: #555555;
 }
 
 .info-row {
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-top: 18px;
+  margin-top: 12px;
 }
 
 .info-label {
-  font-size: 20px;
+  display: none;
   color: #aaaaaa;
 }
 
 .info-value {
-  font-size: 20px;
+  font-size: 16px;
   color: #ffffff;
+  text-align: center;
 }
 
 .remain-section {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: 18px;
+  margin-top: 12px;
 }
 
 .remain-text {
-  font-size: 20px;
+  font-size: 16px;
   color: #ffffff;
   text-align: center;
 }
 
-/* 窄屏/跑道屏适配：宽度 <= 150dp 时使用更紧凑布局（336px 宽屏约 168dp，212px 窄屏约 106dp） */
-@media (max-width: 150) {
+/* 默认使用窄屏布局，媒体查询 3+ 设备在宽度 >= 160dp 时切换为宽屏布局 */
+@media (min-width: 160) {
   .content-area {
-    padding: 0 16px;
+    padding: 0 36px;
   }
 
   .course-card {
-    padding: 16px;
-    border-radius: 12px;
+    padding: 24px;
+    border-radius: 16px;
   }
 
   .course-name {
-    font-size: 22px;
+    font-size: 28px;
   }
 
   .status-badge {
-    font-size: 12px;
-    padding: 2px 6px;
-    border-radius: 6px;
-    margin-left: 6px;
-  }
-
-  .course-time {
-    font-size: 16px;
-    margin-top: 8px;
-  }
-
-  .progress-section {
-    margin-top: 12px;
-  }
-
-  .progress-track {
-    height: 6px;
-  }
-
-  .progress-fill {
-    height: 6px;
-  }
-
-  .progress-text {
-    font-size: 14px;
+    font-size: 15px;
+    padding: 5px 9px;
+    border-radius: 8px;
     margin-left: 8px;
   }
 
+  .course-time {
+    font-size: 20px;
+    margin-top: 14px;
+  }
+
+  .progress-section {
+    margin-top: 18px;
+  }
+
+  .progress-track {
+    height: 8px;
+  }
+
+  .progress-fill {
+    height: 8px;
+  }
+
+  .progress-text {
+    font-size: 18px;
+    margin-left: 10px;
+  }
+
   .card-divider {
-    margin-top: 12px;
+    margin-top: 18px;
   }
 
   .info-row {
-    justify-content: center;
-    margin-top: 12px;
+    justify-content: space-between;
+    margin-top: 18px;
   }
 
   .info-label {
-    display: none;
+    display: flex;
+    font-size: 20px;
   }
 
   .info-value {
-    font-size: 16px;
-    text-align: center;
+    font-size: 20px;
+    text-align: left;
   }
 
   .remain-section {
-    margin-top: 12px;
+    margin-top: 18px;
   }
 
   .remain-text {
-    font-size: 16px;
+    font-size: 20px;
   }
 }
 </style>
