@@ -260,14 +260,14 @@ export default {
 
   onWeekChange(e) {
     if (!e) return
-    this.weekIndex = e.newSelected
+    this.weekIndex = parseInt(e.newSelected, 10) || 0
     this.updateDisplayLabel()
     this.refreshLessons()
   },
 
   onDayChange(e) {
     if (!e) return
-    this.dayIndex = e.newSelected
+    this.dayIndex = parseInt(e.newSelected, 10) || 0
     this.updateDisplayLabel()
     this.refreshLessons()
   },
