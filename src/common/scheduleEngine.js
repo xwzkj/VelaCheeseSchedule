@@ -191,6 +191,7 @@ function getCountdownText(lessons, timeOffset) {
         const end = parseInt(m[3]) * 60 + parseInt(m[4])
         let remain = end - nowTime
         if (remain < 0) remain += 1440
+        remain = Math.ceil(remain)
         if (remain <= 0) return ''
         return lessons[i].name + '\n还剩' + remain + '分钟'
       }
@@ -204,6 +205,7 @@ function getCountdownText(lessons, timeOffset) {
         const start = parseInt(m[1]) * 60 + parseInt(m[2])
         let remain = start - nowTime
         if (remain < 0) remain += 1440
+        remain = Math.ceil(remain)
         if (remain <= 0) return ''
         return '课间休息\n还剩' + remain + '分钟'
       }

@@ -200,8 +200,8 @@
   text-align: center;
 }
 
-/* 默认使用窄屏布局，媒体查询 3+ 设备在宽度 >= 160dp 时切换为宽屏布局 */
-@media (min-width: 160) {
+/* 默认使用窄屏布局，仅在方形屏幕上切换为宽屏布局 */
+@media (shape: rect) {
   .content-area {
     padding: 0 36px;
   }
@@ -418,12 +418,14 @@ export default {
       percent = Math.round((passed / totalDuration) * 100)
       let remainMinutes = timeInfo.end - nowMinutes
       if (remainMinutes < 0) remainMinutes += 1440
+      remainMinutes = Math.ceil(remainMinutes)
       remain = remainMinutes
       remainText = "还剩" + remain + "分钟下课"
     } else if (this.active === 1) {
       percent = 0
       let remainMinutes = timeInfo.start - nowMinutes
       if (remainMinutes < 0) remainMinutes += 1440
+      remainMinutes = Math.ceil(remainMinutes)
       remain = remainMinutes
       remainText = remain + "分钟后上课"
     } else {
