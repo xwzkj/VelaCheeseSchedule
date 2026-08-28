@@ -255,8 +255,8 @@ export default {
   async onShow() {
     if (!engine.inited) {
       await init(storage)
-      this.inited = true
     }
+    this.inited = true
     startTimers()
     if (this._timer) clearInterval(this._timer)
     this._timer = setInterval(() => {

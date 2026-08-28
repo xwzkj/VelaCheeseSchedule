@@ -4,6 +4,7 @@
 import protocol from './protocol.json'
 
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+const SCHEDULE_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
 const DEFAULT_SETTING = {
   timeOffset: 0
@@ -59,6 +60,8 @@ const engine = {
   _activeTimer: null,
   _listeners: []
 }
+
+let initPromise = null
 
 /**
  * 获取今天是星期几
@@ -257,13 +260,14 @@ function csesToConfig(cses) {
     }
     const patterns = []
     const schedule = []
-    const hasEven = cses.schedules.some(item => item.weeks === 'even')
+    const hasEven = cses.schedules.some(item => item && item.weeks === 'even')
     const targetCount = hasEven ? 2 : 1
     while (schedule.length < targetCount) {
       schedule.push(createEmptySchedule())
     }
     const CSES_DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
     for (const scheduleEntry of cses.schedules) {
+      if (!scheduleEntry || !Array.isArray(scheduleEntry.classes)) continue
       const dayIdx = scheduleEntry.enable_day - 1
       if (dayIdx < 0 || dayIdx > 6) continue
       const dayKey = CSES_DAY_KEYS[dayIdx]
@@ -284,15 +288,19 @@ function csesToConfig(cses) {
         patterns.push({ name: '时间表' + (patterns.length + 1), data: newPattern })
         patternIdx = patterns.length - 1
       }
-      const day = { pattern: patternIdx, lessons: lessons }
-      if (scheduleEntry.weeks === 'all') {
+      const weeks = scheduleEntry.weeks || 'all'
+      const createDay = () => ({
+        pattern: patternIdx,
+        lessons: lessons.map(lesson => ({ ...lesson }))
+      })
+      if (weeks === 'all') {
         for (let j = 0; j < schedule.length; j++) {
-          schedule[j][dayKey] = day
+          schedule[j][dayKey] = createDay()
         }
       } else {
-        const scheduleIdx = scheduleEntry.weeks === 'even' ? 1 : 0
+        const scheduleIdx = weeks === 'even' ? 1 : 0
         if (schedule[scheduleIdx]) {
-          schedule[scheduleIdx][dayKey] = day
+          schedule[scheduleIdx][dayKey] = createDay()
         }
       }
     }
@@ -330,16 +338,30 @@ function setFirstWeek(currentWeekNumber) {
  * @returns {boolean}
  */
 function applyConfigObject(d) {
-  if (!d) return false
+  if (!d || d.version !== 1) return false
   try {
-    if (d.patterns) engine.patterns = d.patterns
-    if (d.schedule) {
-      engine.schedule = d.schedule.length ? d.schedule : [d.schedule]
+    const schedule = Array.isArray(d.schedule)
+      ? d.schedule
+      : (d.schedule && typeof d.schedule === 'object' ? [d.schedule] : null)
+    if (!schedule || schedule.length === 0) return false
+    const validSchedule = schedule.every(week => {
+      return week && SCHEDULE_DAYS.every(day => week[day] && Array.isArray(week[day].lessons))
+    })
+    if (!validSchedule) return false
+    if (d.patterns !== undefined && !Array.isArray(d.patterns)) return false
+    if (d.setting && d.setting.timeOffset !== undefined &&
+        (typeof d.setting.timeOffset !== 'number' || !Number.isFinite(d.setting.timeOffset))) {
+      return false
     }
-    if (d.scheduleOverride && d.scheduleOverride.date === formatDate()) {
+
+    engine.patterns = Array.isArray(d.patterns) ? d.patterns : []
+    engine.schedule = schedule
+    engine.scheduleOverride = { date: '1970-01-01', override: [] }
+    if (d.scheduleOverride && d.scheduleOverride.date === formatDate() &&
+        Array.isArray(d.scheduleOverride.override)) {
       engine.scheduleOverride = d.scheduleOverride
     }
-    if (d.firstWeekMonday) engine.firstWeekMonday = d.firstWeekMonday
+    engine.firstWeekMonday = typeof d.firstWeekMonday === 'string' ? d.firstWeekMonday : ''
     if (d.setting) {
       for (const key in d.setting) {
         if (key in engine.setting) {
@@ -422,6 +444,15 @@ function applyConfigString(str, storage) {
       resolve({ success: false, reason: '配置内容解析失败' })
       return
     }
+    const previous = {
+      setting: { ...engine.setting },
+      patterns: engine.patterns,
+      schedule: engine.schedule,
+      scheduleOverride: engine.scheduleOverride,
+      firstWeekMonday: engine.firstWeekMonday,
+      currentScheduleId: engine.currentScheduleId,
+      today: engine.today
+    }
     if (!applyConfigObject(obj)) {
       resolve({ success: false, reason: '配置内容应用失败' })
       return
@@ -429,9 +460,8 @@ function applyConfigString(str, storage) {
     engine.today = getToday()
     engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
     refreshActiveState()
-    notifyListeners()
-
     if (!storage) {
+      notifyListeners()
       resolve({ success: true })
       return
     }
@@ -446,11 +476,27 @@ function applyConfigString(str, storage) {
         },
         fail: function(data, code) {
           console.error('scheduleEngine: storage.set failed', data, code)
+          engine.setting = previous.setting
+          engine.patterns = previous.patterns
+          engine.schedule = previous.schedule
+          engine.scheduleOverride = previous.scheduleOverride
+          engine.firstWeekMonday = previous.firstWeekMonday
+          engine.currentScheduleId = previous.currentScheduleId
+          engine.today = previous.today
+          refreshActiveState()
           resolve({ success: false, reason: '本地存储失败' })
         }
       })
     } catch (e) {
       console.error('scheduleEngine: storage.set exception', e)
+      engine.setting = previous.setting
+      engine.patterns = previous.patterns
+      engine.schedule = previous.schedule
+      engine.scheduleOverride = previous.scheduleOverride
+      engine.firstWeekMonday = previous.firstWeekMonday
+      engine.currentScheduleId = previous.currentScheduleId
+      engine.today = previous.today
+      refreshActiveState()
       resolve({ success: false, reason: '本地存储异常' })
     }
   })
@@ -462,19 +508,21 @@ function applyConfigString(str, storage) {
  * @returns {Promise<void>}
  */
 function init(storage) {
-  return new Promise((resolve) => {
-    if (engine.inited) {
+  if (engine.inited) return Promise.resolve()
+  if (initPromise) return initPromise
+
+  initPromise = new Promise((resolve) => {
+    const finish = () => {
+      engine.today = getToday()
+      engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
+      refreshActiveState()
+      engine.inited = true
+      initPromise = null
       resolve()
-      return
     }
 
-    engine.today = getToday()
-    engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
-    refreshActiveState()
-    engine.inited = true
-
     if (!storage) {
-      resolve()
+      finish()
       return
     }
 
@@ -485,28 +533,38 @@ function init(storage) {
           if (data) {
             try {
               const obj = JSON.parse(data)
-              if (applyConfigObject(obj)) {
-                engine.today = getToday()
-                engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length)
-                refreshActiveState()
-                notifyListeners()
-              }
+              const applied = applyConfigObject(obj)
+              finish()
+              if (applied) notifyListeners()
+              return
             } catch (e) {
               console.error('scheduleEngine: parse cached config failed', e)
             }
           }
-          resolve()
+          finish()
         },
         fail: function(data, code) {
           console.error('scheduleEngine: storage.get failed', data, code)
-          resolve()
+          finish()
         }
       })
     } catch (e) {
       console.error('scheduleEngine: storage.get exception', e)
-      resolve()
+      finish()
     }
   })
+  return initPromise
+}
+
+function resetConfig() {
+  engine.setting = { ...DEFAULT_SETTING }
+  engine.patterns = []
+  engine.schedule = []
+  engine.scheduleOverride = { date: '1970-01-01', override: [] }
+  engine.firstWeekMonday = ''
+  engine.currentScheduleId = 0
+  engine.today = getToday()
+  notifyListeners()
 }
 
 /**
@@ -623,5 +681,6 @@ export {
   stopTimers,
   onUpdate,
   applyConfigString,
+  resetConfig,
   STORAGE_KEY
 }

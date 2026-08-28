@@ -139,7 +139,7 @@ import prompt from "@system.prompt"
 import storage from "@system.storage"
 import defaultConfig from "../../common/config.json"
 import protocol from "../../common/protocol.json"
-import { applyConfigString, STORAGE_KEY } from "../../common/scheduleEngine"
+import { applyConfigString, resetConfig, STORAGE_KEY } from "../../common/scheduleEngine"
 
 export default {
   private: {
@@ -205,16 +205,22 @@ export default {
         prompt.showToast({ message: "导入失败：" + reason, duration: 1000 })
       }
     } else if (this.confirmAction === "clear") {
-      storage.delete({
-        key: STORAGE_KEY,
-        success: function() {
-          prompt.showToast({ message: "配置已清除\n请重启应用", duration: 1000 })
-        },
-        fail: function(data, code) {
-          console.error("scheduleEngine: storage.delete failed", data, code)
-          prompt.showToast({ message: "清除失败", duration: 1000 })
-        }
-      })
+      try {
+        storage.delete({
+          key: STORAGE_KEY,
+          success: function() {
+            resetConfig()
+            prompt.showToast({ message: "配置已清除\n请重启应用", duration: 1000 })
+          },
+          fail: function(data, code) {
+            console.error("scheduleEngine: storage.delete failed", data, code)
+            prompt.showToast({ message: "清除失败", duration: 1000 })
+          }
+        })
+      } catch (e) {
+        console.error("scheduleEngine: storage.delete exception", e)
+        prompt.showToast({ message: "清除失败", duration: 1000 })
+      }
     }
   }
 }
