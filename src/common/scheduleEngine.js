@@ -108,13 +108,13 @@ function getWeekDiff(d1, d2) {
 }
 
 /**
- * 获取当前时间加上偏移后的分钟数
+ * 获取当前时间减去偏移后的分钟数
  * @param {number} offset
  * @returns {number}
  */
 function getMinutesNow(offset) {
   const now = new Date()
-  return (now.getHours() * 60 + now.getMinutes()) + (offset / 60)
+  return (now.getHours() * 60 + now.getMinutes()) - (offset / 60)
 }
 
 /**

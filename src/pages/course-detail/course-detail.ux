@@ -282,7 +282,7 @@ const TIME_REX = /^(\d{1,2})[：:](\d{1,2})[-~ ]+(\d{1,2})[：:](\d{1,2})$/
 
 function getMinutesNow(offset) {
   const now = new Date()
-  return now.getHours() * 60 + now.getMinutes() + (offset / 60)
+  return now.getHours() * 60 + now.getMinutes() - (offset / 60)
 }
 
 function parseTime(time) {

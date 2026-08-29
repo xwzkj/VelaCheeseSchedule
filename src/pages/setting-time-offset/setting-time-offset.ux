@@ -1,0 +1,290 @@
+<template>
+  <div class="page-container" onswipe="onSwipe">
+    <text class="page-title">时间偏移</text>
+    <scroll scroll-y="true" class="content-scroll">
+      <div class="setting-card">
+        <div class="setting-copy">
+          <text class="setting-desc">适用铃声不准情况</text>
+          <text class="setting-desc">正数延后</text>
+          <text class="setting-desc">负数提前</text>
+        </div>
+        <div class="input-wrap">
+          <div class="fake-input">
+            <text class="input-value">{{offsetText}}</text>
+            <text class="input-cursor">|</text>
+          </div>
+          <text class="input-unit">秒</text>
+        </div>
+        <div class="keypad">
+          <div class="key-row">
+            <text class="key" onclick="onKey('1')">1</text>
+            <text class="key" onclick="onKey('2')">2</text>
+            <text class="key" onclick="onKey('3')">3</text>
+          </div>
+          <div class="key-row">
+            <text class="key" onclick="onKey('4')">4</text>
+            <text class="key" onclick="onKey('5')">5</text>
+            <text class="key" onclick="onKey('6')">6</text>
+          </div>
+          <div class="key-row">
+            <text class="key" onclick="onKey('7')">7</text>
+            <text class="key" onclick="onKey('8')">8</text>
+            <text class="key" onclick="onKey('9')">9</text>
+          </div>
+          <div class="key-row">
+            <text class="key key-action" onclick="onKey('-')">±</text>
+            <text class="key" onclick="onKey('0')">0</text>
+            <div class="key key-action" onclick="onBackspace">
+              <image class="backspace-icon" src="/common/backspace.png" alt="blank"></image>
+            </div>
+          </div>
+        </div>
+      </div>
+    </scroll>
+  </div>
+</template>
+
+<style>
+.page-container {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding-top: 48px;
+  padding-bottom: 48px;
+  padding-left: 16px;
+  padding-right: 16px;
+  background-color: #000000;
+}
+
+.page-title {
+  font-size: 28px;
+  color: #ffffff;
+  font-weight: bold;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.content-scroll {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0px;
+}
+
+.setting-card {
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  flex-grow: 1;
+  padding: 16px 16px 20px;
+  border-radius: 12px;
+  background-color: #2a2a2a;
+}
+
+.setting-copy {
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.setting-desc {
+  font-size: 18px;
+  color: #999999;
+  margin-top: 6px;
+  lines: 2;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.input-wrap {
+  flex-direction: row;
+  align-items: center;
+  width: 92%;
+  margin-bottom: 12px;
+}
+
+.fake-input {
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  width: 0;
+  flex-grow: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 2px solid #555555;
+  background-color: #111111;
+}
+
+.input-value {
+  flex-shrink: 1;
+  color: #ffffff;
+  font-size: 22px;
+  text-align: center;
+  lines: 1;
+  text-overflow: ellipsis;
+}
+
+.input-cursor {
+  color: #ce9e04;
+  font-size: 24px;
+  margin-left: 2px;
+}
+
+.input-unit {
+  font-size: 18px;
+  color: #aaaaaa;
+  margin-left: 6px;
+}
+
+.keypad {
+  flex-direction: column;
+  width: 100%;
+}
+
+.key-row {
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.key {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 30%;
+  height: 38px;
+  border-radius: 8px;
+  background-color: #444444;
+  color: #ffffff;
+  font-size: 20px;
+  text-align: center;
+}
+
+.key-action {
+  background-color: #555555;
+  color: #ffffff;
+  font-size: 17px;
+}
+
+.backspace-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+</style>
+
+<script>
+import router from "@system.router"
+import prompt from "@system.prompt"
+import storage from "@system.storage"
+import { engine, init, save } from "../../common/scheduleEngine"
+
+const SAVE_DEBOUNCE_MS = 500
+
+export default {
+  private: {
+    offsetText: "0",
+    _saveTimer: null
+  },
+
+  async onInit() {
+    if (!engine.inited) {
+      await init(storage)
+    }
+    this.syncOffsetText()
+  },
+
+  onShow() {
+    this.syncOffsetText()
+  },
+
+  onHide() {
+    this.flushPendingSave()
+  },
+
+  onDestroy() {
+    this.flushPendingSave()
+  },
+
+  syncOffsetText() {
+    const value = Number(engine.setting.timeOffset) || 0
+    this.offsetText = String(value)
+  },
+
+  onSwipe(e) {
+    if (e && e.direction === "right") {
+      router.back()
+    }
+  },
+
+  onKey(value) {
+    const key = String(value || "")
+    if (!key || (key !== "-" && !/^\d$/.test(key))) return
+    if (key === "-") {
+      if (this.offsetText.charAt(0) === "-") {
+        const unsignedValue = this.offsetText.slice(1)
+        this.offsetText = unsignedValue || "0"
+      } else if (this.offsetText === "0") {
+        this.offsetText = "-"
+      } else {
+        this.offsetText = "-" + this.offsetText
+      }
+    } else {
+      if (this.offsetText === "0") {
+        this.offsetText = key
+      } else {
+        this.offsetText += key
+      }
+    }
+    this.scheduleSave()
+  },
+
+  onBackspace() {
+    const shortenedValue = this.offsetText.slice(0, -1)
+    this.offsetText = shortenedValue || "0"
+    this.scheduleSave()
+  },
+
+  scheduleSave() {
+    if (this._saveTimer) {
+      clearTimeout(this._saveTimer)
+    }
+    this._saveTimer = setTimeout(() => {
+      this._saveTimer = null
+      this.saveOffset().catch((e) => {
+        console.error("setting-time-offset: save failed", e)
+      })
+    }, SAVE_DEBOUNCE_MS)
+  },
+
+  flushPendingSave() {
+    if (!this._saveTimer) return
+    clearTimeout(this._saveTimer)
+    this._saveTimer = null
+    this.saveOffset().catch((e) => {
+      console.error("setting-time-offset: save failed", e)
+    })
+  },
+
+  async saveOffset() {
+    const raw = String(this.offsetText || "").trim()
+    const value = raw === "" ? 0 : Number(raw)
+    if (!Number.isFinite(value)) {
+      this.syncOffsetText()
+      prompt.showToast({ message: "请输入有效数字", duration: 1000 })
+      return
+    }
+    const previousValue = Number(engine.setting.timeOffset) || 0
+    engine.setting.timeOffset = value
+    const saved = await save(storage)
+    if (!saved) {
+      engine.setting.timeOffset = previousValue
+      this.syncOffsetText()
+      prompt.showToast({ message: "保存失败", duration: 1000 })
+    }
+  }
+}
+</script>

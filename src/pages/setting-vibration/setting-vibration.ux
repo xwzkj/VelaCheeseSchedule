@@ -1,0 +1,126 @@
+<template>
+  <div class="page-container" onswipe="onSwipe">
+    <text class="page-title">震动提醒</text>
+    <div class="setting-card">
+      <div class="setting-row">
+        <div class="setting-copy">
+          <text class="setting-desc">上下课时震动提醒</text>
+        </div>
+        <div class="switch-wrap">
+          <switch class="setting-switch" checked="{{enabled}}" onchange="onToggle"></switch>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+.page-container {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding-top: 48px;
+  padding-bottom: 48px;
+  padding-left: 16px;
+  padding-right: 16px;
+  background-color: #000000;
+}
+
+.page-title {
+  font-size: 28px;
+  color: #ffffff;
+  font-weight: bold;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.setting-card {
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  background-color: #2a2a2a;
+}
+
+.setting-row {
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.setting-copy {
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.setting-desc {
+  font-size: 18px;
+  color: #999999;
+  margin-top: 6px;
+  lines: 2;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.switch-wrap {
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 58px;
+  height: 36px;
+  border-radius: 18px;
+  background-color: #4a4a4a;
+}
+
+.setting-switch {
+  width: 52px;
+  height: 30px;
+  flex-shrink: 0;
+}
+</style>
+
+<script>
+import router from "@system.router"
+import storage from "@system.storage"
+import prompt from "@system.prompt"
+import { getVibrationEnabled, setVibrationEnabled } from "../../common/userSettings"
+
+export default {
+  private: {
+    enabled: false,
+    _toggleRequestId: 0
+  },
+
+  async onInit() {
+    this.enabled = await getVibrationEnabled(storage)
+  },
+
+  async onShow() {
+    this.enabled = await getVibrationEnabled(storage)
+  },
+
+  onSwipe(e) {
+    if (e && e.direction === "right") {
+      router.back()
+    }
+  },
+
+  async onToggle(e) {
+    const checked = e && e.checked !== undefined ? e.checked : e && e.value
+    const nextValue = checked === true || checked === "true" || checked === "1"
+    const previousValue = this.enabled
+    const requestId = this._toggleRequestId + 1
+    this._toggleRequestId = requestId
+    this.enabled = nextValue
+    const saved = await setVibrationEnabled(storage, nextValue)
+    if (!saved && requestId === this._toggleRequestId) {
+      this.enabled = previousValue
+      prompt.showToast({ message: "保存失败", duration: 1000 })
+    }
+  }
+}
+</script>

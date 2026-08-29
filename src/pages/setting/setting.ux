@@ -3,6 +3,8 @@
     <text class="page-title">设置</text>
     <div class="btn-group">
       <text class="setting-btn" onclick="onFirstWeek">起始周设置</text>
+      <text class="setting-btn" onclick="onVibration">震动提醒</text>
+      <text class="setting-btn" onclick="onTimeOffset">时间偏移</text>
       <text class="setting-btn" onclick="onUseDefault">使用默认课表</text>
       <text class="danger-btn" onclick="onClear">清除课表配置</text>
     </div>
@@ -158,6 +160,18 @@ export default {
   onFirstWeek() {
     router.push({
       uri: "/pages/setting-first-week"
+    })
+  },
+
+  onVibration() {
+    router.push({
+      uri: "/pages/setting-vibration"
+    })
+  },
+
+  onTimeOffset() {
+    router.push({
+      uri: "/pages/setting-time-offset"
     })
   },
 

@@ -22,6 +22,9 @@
       "name": "system.prompt"
     },
     {
+      "name": "system.vibrator"
+    },
+    {
       "name": "system.app"
     }
   ],
@@ -49,6 +52,12 @@
       },
       "pages/setting-first-week": {
         "component": "setting-first-week"
+      },
+      "pages/setting-vibration": {
+        "component": "setting-vibration"
+      },
+      "pages/setting-time-offset": {
+        "component": "setting-time-offset"
       }
     }
   },
