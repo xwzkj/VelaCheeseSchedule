@@ -43,9 +43,6 @@ export default {
         }
       })
     }
-  },
-  onDestroy() {
-    console.log("app destroyed")
   }
 }
 </script>

@@ -107,12 +107,17 @@ export default {
   async onWeekChange(e) {
     if (!e) return
     const newIndex = e.newSelected
+    const previousFirstWeekMonday = engine.firstWeekMonday
+    const previousScheduleId = engine.currentScheduleId
     setFirstWeek(newIndex)
     this.selectedIndex = engine.currentScheduleId
     const saved = await save(storage)
     if (saved) {
       prompt.showToast({ message: "已设置", duration: 1000 })
     } else {
+      engine.firstWeekMonday = previousFirstWeekMonday
+      engine.currentScheduleId = previousScheduleId
+      this.selectedIndex = previousScheduleId
       prompt.showToast({ message: "保存失败", duration: 1000 })
     }
   }

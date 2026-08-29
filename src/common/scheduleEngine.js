@@ -52,7 +52,7 @@ const engine = {
   today: '',
   patterns: [],
   schedule: [],
-  firstWeekMonday: '',
+  firstWeekMonday: formatDate(getMonday(new Date())),
   currentScheduleId: 0,
   scheduleOverride: { date: '1970-01-01', override: [] },
 
@@ -113,8 +113,9 @@ function getWeekDiff(d1, d2) {
  * @returns {number}
  */
 function getMinutesNow(offset) {
-  const now = new Date()
-  return (now.getHours() * 60 + now.getMinutes()) - (offset / 60)
+  const offsetSeconds = Number(offset) || 0
+  const now = new Date(Date.now() - offsetSeconds * 1000)
+  return now.getHours() * 60 + now.getMinutes()
 }
 
 /**
@@ -165,7 +166,8 @@ function isActiveTime(time, lastTime, timeOffset) {
 function getScheduleToday(schedule, scheduleId, today, override) {
   const daySchedule = schedule[scheduleId]
   if (!daySchedule || !daySchedule[today]) return []
-  if (override.date === formatDate()) {
+  const isCurrentDay = scheduleId === engine.currentScheduleId && today === engine.today
+  if (isCurrentDay && override && override.date === formatDate()) {
     return daySchedule[today].lessons.map((lesson, i) => {
       const l = { ...lesson }
       if (override.override && override.override[i]) {
@@ -229,7 +231,8 @@ function refreshActiveState() {
   let lastLessonIdx = -1
   for (let i = 0; i < todayLessons.length; i++) {
     if (todayLessons[i].isDivider) continue
-    const lastTime = lastLessonIdx >= 0 ? todayLessons[lastLessonIdx].time : null
+    // 首节课使用自身时间范围作为上一节，保持跨午夜课程的课前判断一致
+    const lastTime = lastLessonIdx >= 0 ? todayLessons[lastLessonIdx].time : todayLessons[i].time
     scheduleDay[engine.today].lessons[i].active = isActiveTime(todayLessons[i].time, lastTime, engine.setting.timeOffset)
     lastLessonIdx = i
   }
@@ -309,11 +312,11 @@ function csesToConfig(cses) {
     }
     return {
       version: 1,
-      setting: { ...DEFAULT_SETTING },
+      setting: { ...engine.setting },
       patterns: patterns,
       schedule: schedule,
-      scheduleOverride: { date: '1970-01-01', override: [] },
-      firstWeekMonday: ''
+      scheduleOverride: engine.scheduleOverride,
+      firstWeekMonday: engine.firstWeekMonday || formatDate(getMonday(new Date()))
     }
   } catch (e) {
     return null
@@ -361,7 +364,11 @@ function applyConfigObject(d) {
         Array.isArray(d.scheduleOverride.override)) {
       engine.scheduleOverride = d.scheduleOverride
     }
-    engine.firstWeekMonday = typeof d.firstWeekMonday === 'string' ? d.firstWeekMonday : ''
+    if (typeof d.firstWeekMonday === 'string' && d.firstWeekMonday) {
+      engine.firstWeekMonday = d.firstWeekMonday
+    } else if (!engine.firstWeekMonday) {
+      engine.firstWeekMonday = formatDate(getMonday(new Date()))
+    }
     if (d.setting) {
       for (const key in d.setting) {
         if (key in engine.setting) {
@@ -561,7 +568,7 @@ function resetConfig() {
   engine.patterns = []
   engine.schedule = []
   engine.scheduleOverride = { date: '1970-01-01', override: [] }
-  engine.firstWeekMonday = ''
+  engine.firstWeekMonday = formatDate(getMonday(new Date()))
   engine.currentScheduleId = 0
   engine.today = getToday()
   notifyListeners()
@@ -572,11 +579,21 @@ function resetConfig() {
  * @returns {{ version: number, setting: { timeOffset: number }, patterns: Pattern[], schedule: Schedule[], scheduleOverride: { date: string, override: string[] }, firstWeekMonday: string }}
  */
 function getConfigObject() {
+  const schedule = engine.schedule.map(week => {
+    const copiedWeek = JSON.parse(JSON.stringify(week))
+    for (const day of SCHEDULE_DAYS) {
+      if (!copiedWeek[day] || !Array.isArray(copiedWeek[day].lessons)) continue
+      for (const lesson of copiedWeek[day].lessons) {
+        if (lesson && typeof lesson === 'object') delete lesson.active
+      }
+    }
+    return copiedWeek
+  })
   return {
     version: 1,
     setting: engine.setting,
     patterns: engine.patterns,
-    schedule: engine.schedule,
+    schedule: schedule,
     scheduleOverride: engine.scheduleOverride,
     firstWeekMonday: engine.firstWeekMonday
   }
@@ -589,18 +606,18 @@ function getConfigObject() {
  */
 function save(storage) {
   return new Promise((resolve) => {
-    notifyListeners()
     if (!storage) {
+      notifyListeners()
       resolve(true)
       return
     }
-    const configStr = JSON.stringify(getConfigObject())
-    // console.log(JSON.parse(configStr))
     try {
+      const configStr = JSON.stringify(getConfigObject())
       storage.set({
         key: STORAGE_KEY,
         value: configStr,
         success: function() {
+          notifyListeners()
           resolve(true)
         },
         fail: function(data, code) {

@@ -281,8 +281,9 @@ import { engine, init, startTimers, stopTimers, getScheduleToday } from "../../c
 const TIME_REX = /^(\d{1,2})[：:](\d{1,2})[-~ ]+(\d{1,2})[：:](\d{1,2})$/
 
 function getMinutesNow(offset) {
-  const now = new Date()
-  return now.getHours() * 60 + now.getMinutes() - (offset / 60)
+  const offsetSeconds = Number(offset) || 0
+  const now = new Date(Date.now() - offsetSeconds * 1000)
+  return now.getHours() * 60 + now.getMinutes()
 }
 
 function parseTime(time) {
@@ -407,7 +408,6 @@ export default {
 
     const nowMinutes = getMinutesNow(engine.setting.timeOffset || 0)
     let percent = 0
-    let remain = 0
     let remainText = ""
 
     if (this.active === 2) {
@@ -419,15 +419,13 @@ export default {
       let remainMinutes = timeInfo.end - nowMinutes
       if (remainMinutes < 0) remainMinutes += 1440
       remainMinutes = Math.ceil(remainMinutes)
-      remain = remainMinutes
-      remainText = "还剩" + remain + "分钟下课"
+      remainText = "还剩" + remainMinutes + "分钟下课"
     } else if (this.active === 1) {
       percent = 0
       let remainMinutes = timeInfo.start - nowMinutes
       if (remainMinutes < 0) remainMinutes += 1440
       remainMinutes = Math.ceil(remainMinutes)
-      remain = remainMinutes
-      remainText = remain + "分钟后上课"
+      remainText = remainMinutes + "分钟后上课"
     } else {
       percent = 0
       remainText = ""
