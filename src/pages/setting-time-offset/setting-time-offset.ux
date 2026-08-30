@@ -5,8 +5,7 @@
       <div class="setting-card">
         <div class="setting-copy">
           <text class="setting-desc">适用铃声不准情况</text>
-          <text class="setting-desc">正数延后</text>
-          <text class="setting-desc">负数提前</text>
+          <text class="setting-desc">正数延后 负数提前</text>
         </div>
         <div class="input-wrap">
           <div class="fake-input">
@@ -87,7 +86,7 @@
 }
 
 .setting-desc {
-  font-size: 18px;
+  font-size: 16px;
   color: #999999;
   margin-top: 6px;
   text-align: center;
@@ -134,12 +133,14 @@
 
 .keypad {
   flex-direction: column;
+  flex-grow: 1;
   width: 100%;
 }
 
 .key-row {
   flex-direction: row;
   justify-content: space-between;
+  flex-grow: 1;
   width: 100%;
   margin-bottom: 6px;
 }
@@ -149,7 +150,7 @@
   justify-content: center;
   align-items: center;
   width: 30%;
-  height: 38px;
+  height: 90%;
   border-radius: 8px;
   background-color: #444444;
   color: #ffffff;
