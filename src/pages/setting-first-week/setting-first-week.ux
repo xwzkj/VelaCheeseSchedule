@@ -74,7 +74,8 @@ import { engine, init, setFirstWeek, save } from "../../common/scheduleEngine"
 export default {
   private: {
     weekOptions: [],
-    selectedIndex: 0
+    selectedIndex: 0,
+    _savePromise: null
   },
 
   async onInit() {
@@ -98,8 +99,11 @@ export default {
     this.weekOptions = options
   },
 
-  onSwipe(e) {
+  async onSwipe(e) {
     if (e && e.direction === "right") {
+      if (this._savePromise) {
+        await this._savePromise
+      }
       router.back()
     }
   },
@@ -111,7 +115,9 @@ export default {
     const previousScheduleId = engine.currentScheduleId
     setFirstWeek(newIndex)
     this.selectedIndex = engine.currentScheduleId
-    const saved = await save(storage)
+    this._savePromise = save(storage)
+    const saved = await this._savePromise
+    this._savePromise = null
     if (saved) {
       prompt.showToast({ message: "已设置", duration: 1000 })
     } else {

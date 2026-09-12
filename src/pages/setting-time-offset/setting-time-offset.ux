@@ -209,8 +209,9 @@ export default {
     this.offsetText = String(value)
   },
 
-  onSwipe(e) {
+  async onSwipe(e) {
     if (e && e.direction === "right") {
+      await this.flushPendingSave()
       router.back()
     }
   },
@@ -255,11 +256,12 @@ export default {
     }, SAVE_DEBOUNCE_MS)
   },
 
-  flushPendingSave() {
-    if (!this._saveTimer) return
-    clearTimeout(this._saveTimer)
-    this._saveTimer = null
-    this.saveOffset().catch((e) => {
+  async flushPendingSave() {
+    if (this._saveTimer) {
+      clearTimeout(this._saveTimer)
+      this._saveTimer = null
+    }
+    return this.saveOffset().catch((e) => {
       console.error("setting-time-offset: save failed", e)
     })
   },
