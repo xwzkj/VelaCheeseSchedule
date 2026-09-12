@@ -2,12 +2,23 @@
 import storage from "@system.storage"
 import interconnect from "@system.interconnect"
 import prompt from "@system.prompt"
+import vibrator from "@system.vibrator"
+import resident from "@system.resident"
 import protocol from "./common/protocol.json"
-import { init, applyConfigString } from "./common/scheduleEngine"
+import { init, applyConfigString, engine, startTimers, stopTimers, getScheduleToday } from "./common/scheduleEngine"
+import { getVibrationEnabled } from "./common/userSettings"
 
 export default {
+  private: {
+    _timer: null,
+    _lastActiveIndex: -1,
+    _vibrationLoaded: false,
+    _backgroundSnapshotReady: false
+  },
   async onCreate() {
     await init(storage)
+    this.startResident()
+    await this.startBackgroundVibration()
     const connect = interconnect.instance()
     connect.onmessage = async (data) => {
       const content = (data && data.data) || ""
@@ -42,6 +53,67 @@ export default {
           data: messageText
         }
       })
+    }
+  },
+
+  async startBackgroundVibration() {
+    await init(storage)
+    this._vibrationLoaded = await getVibrationEnabled(storage)
+    startTimers()
+    if (this._timer) clearInterval(this._timer)
+    this._timer = setInterval(async () => {
+      const lessons = getScheduleToday(engine.schedule, engine.currentScheduleId, engine.today, engine.scheduleOverride)
+      let activeIndex = -1
+      for (let i = 0; i < lessons.length; i++) {
+        if (!lessons[i].isDivider && lessons[i].active === 2) { activeIndex = i; break }
+      }
+      if (!this._backgroundSnapshotReady) {
+        this._lastActiveIndex = activeIndex
+        this._backgroundSnapshotReady = true
+        return
+      }
+      const lessonChanged = activeIndex !== this._lastActiveIndex
+      const hadActiveLesson = this._lastActiveIndex >= 0
+      const hasActiveLesson = activeIndex >= 0
+      if (lessonChanged && (hadActiveLesson || hasActiveLesson) && this._vibrationLoaded) {
+        try {
+          const sleep = (time) => {return new Promise(resolve => setTimeout(resolve, time));}
+          for(let i = 0; i < 3; i++){
+            vibrator.vibrate({mode: 'short'})
+            await sleep(100)
+            vibrator.vibrate({mode: 'long'})
+            await sleep(100)
+            vibrator.vibrate({mode: 'short'})
+            await sleep(200)
+          }
+        } catch (e) {
+          console.error("app: vibrator failed", e)
+        }
+      }
+      this._lastActiveIndex = activeIndex
+    }, 1000)
+  },
+
+  startResident() {
+    try {
+      if (resident && typeof resident.start === "function") {
+        const result = resident.start({desc: 'run'})
+        if (result && typeof result.catch === "function") {
+          result.catch((e) => console.error("app: resident start rejected", e))
+        }
+      }
+    } catch (e) {
+      console.error("app: resident start exception", e)
+    }
+  },
+
+  onDestroy() {
+    if (this._timer) clearInterval(this._timer)
+    stopTimers()
+    try {
+      if (resident && typeof resident.stop === "function") resident.stop()
+    } catch (e) {
+      console.error("app: resident stop exception", e)
     }
   }
 }

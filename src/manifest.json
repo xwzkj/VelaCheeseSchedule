@@ -26,11 +26,25 @@
     },
     {
       "name": "system.app"
+    },
+    {
+      "name": "system.resident",
+      "desc": "用于后台运行"
+    },
+    {
+      "name": "system.request",
+      "desc": "用于后台运行"
     }
   ],
   "config": {
     "logLevel": "log",
-    "designWidth": "device-width"
+    "designWidth": "device-width",
+    "background": {
+      "features": [
+        "system.request",
+        "system.resident"
+      ]
+    }
   },
   "router": {
     "entry": "pages/index",
@@ -61,5 +75,5 @@
       }
     }
   },
-	"minAPILevel": 2
+  "minAPILevel": 2
 }
