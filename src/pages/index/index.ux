@@ -246,6 +246,8 @@ export default {
     _timer: null,
     _lastScheduleKey: "",
     _lastActiveIndex: -1,
+    _initialScrolled: false,
+    _scrollTimer: null,
     _vibrationEnabled: false,
     _vibrationLoaded: false,
     _hasActiveSnapshot: false,
@@ -265,6 +267,7 @@ export default {
     this._vibrationEnabled = await getVibrationEnabled(storage)
     this._vibrationLoaded = true
     this.inited = true
+    this._initialScrolled = false
     startTimers()
     if (this._timer) clearInterval(this._timer)
     this._timer = setInterval(() => {
@@ -278,8 +281,13 @@ export default {
       clearInterval(this._timer)
       this._timer = null
     }
+    if (this._scrollTimer) {
+      clearTimeout(this._scrollTimer)
+      this._scrollTimer = null
+    }
     this._hasActiveSnapshot = false
     this._vibrationLoaded = false
+    this._initialScrolled = false
   },
 
   onDestroy() {
@@ -288,11 +296,16 @@ export default {
       clearInterval(this._timer)
       this._timer = null
     }
+    if (this._scrollTimer) {
+      clearTimeout(this._scrollTimer)
+      this._scrollTimer = null
+    }
     if (this._unsubscribe) {
       this._unsubscribe()
       this._unsubscribe = null
     }
     this._vibrationLoaded = false
+    this._initialScrolled = false
   },
 
   vibrateOnLessonChange(activeLessonIndex) {
@@ -368,12 +381,17 @@ export default {
         scrollTop += LESSON_ITEM_HEIGHT
       }
     }
-    setTimeout(() => {
+    if (this._scrollTimer) {
+      clearTimeout(this._scrollTimer)
+      this._scrollTimer = null
+    }
+    this._scrollTimer = setTimeout(() => {
+      this._scrollTimer = null
       const scroll = this.$element("lessonScroll")
       if (scroll && scroll.scrollTo) {
         scroll.scrollTo({ top: scrollTop, behavior: 'smooth' })
       }
-    }, 100)
+    }, 200)
   },
 
   refreshDisplay() {
@@ -433,10 +451,16 @@ export default {
         id: scheduleKey + ":" + index
       }))
       // 当前课程发生变化时滚动到当前课程，并露出上一节
-      if (activeIndex !== -1 && activeIndex !== this._lastActiveIndex) {
+      if (activeIndex !== -1 && (activeIndex !== this._lastActiveIndex || !this._initialScrolled)) {
         this._lastActiveIndex = activeIndex
+        this._initialScrolled = true
         this.scrollToActive(activeIndex)
       }
+    } else if (activeIndex !== -1 && !this._initialScrolled) {
+      // 首次加载页面时若未触发rebuild，依然需要滚动到当前课程
+      this._lastActiveIndex = activeIndex
+      this._initialScrolled = true
+      this.scrollToActive(activeIndex)
     }
     if (activeIndex === -1) {
       this._lastActiveIndex = -1
