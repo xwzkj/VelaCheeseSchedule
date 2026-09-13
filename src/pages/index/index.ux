@@ -221,7 +221,6 @@
 <script>
 import router from "@system.router"
 import storage from "@system.storage"
-import vibrator from "@system.vibrator"
 import {
   engine,
   init,
@@ -231,7 +230,6 @@ import {
   getCountdownText,
   onUpdate
 } from "../../common/scheduleEngine"
-import { getVibrationEnabled } from "../../common/userSettings"
 
 export default {
   private: {
@@ -247,11 +245,7 @@ export default {
     _lastScheduleKey: "",
     _lastActiveIndex: -1,
     _initialScrolled: false,
-    _scrollTimer: null,
-    _vibrationEnabled: false,
-    _vibrationLoaded: false,
-    _hasActiveSnapshot: false,
-    _lastActiveLessonIndex: -1
+    _scrollTimer: null
   },
 
   onInit() {
@@ -264,8 +258,6 @@ export default {
     if (!engine.inited) {
       await init(storage)
     }
-    this._vibrationEnabled = await getVibrationEnabled(storage)
-    this._vibrationLoaded = true
     this.inited = true
     this._initialScrolled = false
     startTimers()
@@ -285,8 +277,6 @@ export default {
       clearTimeout(this._scrollTimer)
       this._scrollTimer = null
     }
-    this._hasActiveSnapshot = false
-    this._vibrationLoaded = false
     this._initialScrolled = false
   },
 
@@ -304,34 +294,7 @@ export default {
       this._unsubscribe()
       this._unsubscribe = null
     }
-    this._vibrationLoaded = false
     this._initialScrolled = false
-  },
-
-  vibrateOnLessonChange(activeLessonIndex) {
-    if (!this._vibrationLoaded) return
-    if (!this._hasActiveSnapshot) {
-      this._lastActiveLessonIndex = activeLessonIndex
-      this._hasActiveSnapshot = true
-      return
-    }
-    const changed = activeLessonIndex !== this._lastActiveLessonIndex
-    const hadActiveLesson = this._lastActiveLessonIndex >= 0
-    const hasActiveLesson = activeLessonIndex >= 0
-    this._lastActiveLessonIndex = activeLessonIndex
-    if (!changed || (!hadActiveLesson && !hasActiveLesson) || !this._vibrationEnabled) {
-      return
-    }
-    try {
-      if (vibrator && typeof vibrator.vibrate === "function") {
-        const result = vibrator.vibrate()
-        if (result && typeof result.catch === "function") {
-          result.catch((e) => console.error("index: vibrator.vibrate rejected", e))
-        }
-      }
-    } catch (e) {
-      console.error("index: vibrator.vibrate failed", e)
-    }
   },
 
   onFooterTap() {
@@ -404,14 +367,6 @@ export default {
       engine.today,
       engine.scheduleOverride
     )
-    let activeLessonIndex = -1
-    for (let i = 0; i < currentLessons.length; i++) {
-      if (!currentLessons[i].isDivider && currentLessons[i].active === 2) {
-        activeLessonIndex = i
-        break
-      }
-    }
-    this.vibrateOnLessonChange(activeLessonIndex)
 
     let shouldRebuild = this._lastScheduleKey !== scheduleKey
     let activeIndex = -1
