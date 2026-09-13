@@ -14,14 +14,14 @@ export default {
     _lastActiveIndex: -1,
     _vibrationLoaded: false,
     _backgroundSnapshotReady: false,
-    _unsubVibration: null
+    _unsubVibration: null,
+    _isResident: false
   },
   async onCreate() {
     this._unsubVibration = onVibrationChange((enabled) => {
-      this._vibrationLoaded = enabled
+      this.updateVibrationAndResident(enabled)
     })
     await init(storage)
-    this.startResident()
     await this.startBackgroundVibration()
     const connect = interconnect.instance()
     connect.onmessage = async (data) => {
@@ -61,12 +61,14 @@ export default {
   },
 
   async onShow() {
-    this._vibrationLoaded = await getVibrationEnabled(storage)
+    const enabled = await getVibrationEnabled(storage)
+    this.updateVibrationAndResident(enabled)
   },
 
   async startBackgroundVibration() {
     await init(storage)
-    this._vibrationLoaded = await getVibrationEnabled(storage)
+    const enabled = await getVibrationEnabled(storage)
+    this.updateVibrationAndResident(enabled)
     startTimers()
     if (this._timer) clearInterval(this._timer)
     this._timer = setInterval(async () => {
@@ -102,16 +104,40 @@ export default {
     }, 1000)
   },
 
+  updateVibrationAndResident(enabled) {
+    this._vibrationLoaded = !!enabled
+    if (this._vibrationLoaded) {
+      this.startResident()
+    } else {
+      this.stopResident()
+    }
+  },
+
   startResident() {
+    if (this._isResident) return
     try {
       if (resident && typeof resident.start === "function") {
         const result = resident.start({desc: 'run'})
         if (result && typeof result.catch === "function") {
           result.catch((e) => console.error("app: resident start rejected", e))
         }
+        this._isResident = true
       }
     } catch (e) {
       console.error("app: resident start exception", e)
+    }
+  },
+
+  stopResident() {
+    if (!this._isResident) return
+    try {
+      if (resident && typeof resident.stop === "function") {
+        resident.stop()
+      }
+    } catch (e) {
+      console.error("app: resident stop exception", e)
+    } finally {
+      this._isResident = false
     }
   },
 
@@ -122,11 +148,7 @@ export default {
       this._unsubVibration()
       this._unsubVibration = null
     }
-    try {
-      if (resident && typeof resident.stop === "function") resident.stop()
-    } catch (e) {
-      console.error("app: resident stop exception", e)
-    }
+    this.stopResident()
   }
 }
 </script>
