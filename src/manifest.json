@@ -52,8 +52,8 @@
       "pages/index": {
         "component": "index"
       },
-      "pages/detail": {
-        "component": "detail"
+      "pages/schedule-detail": {
+        "component": "schedule-detail"
       },
       "pages/course-detail": {
         "component": "course-detail"

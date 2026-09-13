@@ -300,7 +300,7 @@ export default {
   onFooterTap() {
     const day = new Date().getDay()
     router.push({
-      uri: "/pages/detail",
+      uri: "/pages/schedule-detail",
       params: {
         weekIndex: this.currentScheduleId,
         dayIndex: day === 0 ? 6 : day - 1
