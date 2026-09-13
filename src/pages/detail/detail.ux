@@ -8,14 +8,14 @@
         type="text"
         class="week-picker"
         range="{{weekOptions}}"
-        selected="{{weekIndex}}"
+        selected="{{selWeekIndex}}"
         onchange="onWeekChange"
       ></picker>
       <picker
         type="text"
         class="day-picker"
         range="{{dayOptions}}"
-        selected="{{dayIndex}}"
+        selected="{{selDayIndex}}"
         onchange="onDayChange"
       ></picker>
     </div>
@@ -195,15 +195,17 @@ export default {
     displayLabel: "",
     weekOptions: [],
     dayOptions: [],
-    lessons: []
+    lessons: [],
+    selWeekIndex: 0,
+    selDayIndex: 0
   },
 
   async onInit() {
+    this.selWeekIndex = parseInt(this.weekIndex, 10) || 0
+    this.selDayIndex = parseInt(this.dayIndex, 10) || 0
     if (!engine.inited) {
       await init(storage)
     }
-    this.weekIndex = parseInt(this.weekIndex, 10) || 0
-    this.dayIndex = parseInt(this.dayIndex, 10) || 0
     this.buildOptions()
     this.updateDisplayLabel()
     this.refreshLessons()
@@ -251,8 +253,8 @@ export default {
     router.push({
       uri: "/pages/course-detail",
       params: {
-        scheduleId: this.weekIndex,
-        dayKey: WEEKDAYS[this.dayIndex],
+        scheduleId: this.selWeekIndex,
+        dayKey: WEEKDAYS[this.selDayIndex],
         lessonIndex: index
       }
     })
@@ -260,35 +262,35 @@ export default {
 
   onWeekChange(e) {
     if (!e) return
-    this.weekIndex = parseInt(e.newSelected, 10) || 0
+    this.selWeekIndex = parseInt(e.newSelected, 10) || 0
     this.updateDisplayLabel()
     this.refreshLessons()
   },
 
   onDayChange(e) {
     if (!e) return
-    this.dayIndex = parseInt(e.newSelected, 10) || 0
+    this.selDayIndex = parseInt(e.newSelected, 10) || 0
     this.updateDisplayLabel()
     this.refreshLessons()
   },
 
   updateDisplayLabel() {
     this.displayLabel =
-      "课表" + (this.weekIndex + 1) + " 周" + DAY_LABELS[this.dayIndex]
+      "课表" + (this.selWeekIndex + 1) + " 周" + DAY_LABELS[this.selDayIndex]
   },
 
   refreshLessons() {
-    const dayKey = WEEKDAYS[this.dayIndex]
+    const dayKey = WEEKDAYS[this.selDayIndex]
     const override = engine.scheduleOverride
     const lessons = getScheduleToday(
       engine.schedule,
-      this.weekIndex,
+      this.selWeekIndex,
       dayKey,
       override && override.date ? override : { date: "1970-01-01", override: [] }
     )
     this.lessons = lessons.map((lesson, index) => ({
       ...lesson,
-      id: this.weekIndex + ":" + this.dayIndex + ":" + index
+      id: this.selWeekIndex + ":" + this.selDayIndex + ":" + index
     }))
   }
 }
