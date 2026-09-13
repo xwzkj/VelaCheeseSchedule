@@ -1,5 +1,31 @@
 const VIBRATION_STORAGE_KEY = 'vibrateWhenLessonSwitch'
 
+const vibrationListeners = []
+
+function notifyVibrationListeners(enabled) {
+  for (let i = 0; i < vibrationListeners.length; i++) {
+    try {
+      vibrationListeners[i](enabled)
+    } catch (e) {
+      console.error('userSettings: listener failed', e)
+    }
+  }
+}
+
+/**
+ * 监听震动开关变化
+ * @param {(enabled: boolean) => void} listener
+ * @returns {() => void} 取消监听函数
+ */
+function onVibrationChange(listener) {
+  if (typeof listener !== 'function') return () => {}
+  vibrationListeners.push(listener)
+  return () => {
+    const idx = vibrationListeners.indexOf(listener)
+    if (idx >= 0) vibrationListeners.splice(idx, 1)
+  }
+}
+
 function parseBoolean(value) {
   if (typeof value === 'boolean') return value
   if (typeof value !== 'string') return false
@@ -50,7 +76,10 @@ function setVibrationEnabled(storage, enabled) {
       storage.set({
         key: VIBRATION_STORAGE_KEY,
         value: enabled ? 'true' : 'false',
-        success: () => resolve(true),
+        success: () => {
+          notifyVibrationListeners(enabled)
+          resolve(true)
+        },
         fail: (data, code) => {
           console.error('userSettings: storage.set failed', data, code)
           resolve(false)
@@ -66,5 +95,6 @@ function setVibrationEnabled(storage, enabled) {
 export {
   VIBRATION_STORAGE_KEY,
   getVibrationEnabled,
-  setVibrationEnabled
+  setVibrationEnabled,
+  onVibrationChange
 }

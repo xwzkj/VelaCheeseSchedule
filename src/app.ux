@@ -6,16 +6,20 @@ import vibrator from "@system.vibrator"
 import resident from "@system.resident"
 import protocol from "./common/protocol.json"
 import { init, applyConfigString, engine, startTimers, stopTimers, getScheduleToday } from "./common/scheduleEngine"
-import { getVibrationEnabled } from "./common/userSettings"
+import { getVibrationEnabled, onVibrationChange } from "./common/userSettings"
 
 export default {
   private: {
     _timer: null,
     _lastActiveIndex: -1,
     _vibrationLoaded: false,
-    _backgroundSnapshotReady: false
+    _backgroundSnapshotReady: false,
+    _unsubVibration: null
   },
   async onCreate() {
+    this._unsubVibration = onVibrationChange((enabled) => {
+      this._vibrationLoaded = enabled
+    })
     await init(storage)
     this.startResident()
     await this.startBackgroundVibration()
@@ -54,6 +58,10 @@ export default {
         }
       })
     }
+  },
+
+  async onShow() {
+    this._vibrationLoaded = await getVibrationEnabled(storage)
   },
 
   async startBackgroundVibration() {
@@ -110,6 +118,10 @@ export default {
   onDestroy() {
     if (this._timer) clearInterval(this._timer)
     stopTimers()
+    if (this._unsubVibration) {
+      this._unsubVibration()
+      this._unsubVibration = null
+    }
     try {
       if (resident && typeof resident.stop === "function") resident.stop()
     } catch (e) {
