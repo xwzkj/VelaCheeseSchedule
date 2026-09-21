@@ -9,30 +9,36 @@
         <text class="date-display">{{ dateLabel }}</text>
       </div>
       <div class="course-card">
-        <div class="card-header">
-          <text class="course-name">{{ name }}</text>
-          <text if="{{active === 2}}" class="status-badge status-badge--active">上课中</text>
-          <text elif="{{active === 1}}" class="status-badge status-badge--upcoming">即将上课</text>
-          <text else class="status-badge status-badge--inactive">非活跃课程</text>
-        </div>
-        <text class="course-time">{{ time }}</text>
-        <div class="progress-section">
-          <div class="progress-track">
-            <div class="progress-fill" style="width: {{ progressPercent }}%"></div>
+        <div class="course-summary">
+          <div class="card-header">
+            <text class="course-name">{{ name }}</text>
+            <text if="{{active === 2}}" class="status-badge status-badge--active">上课中</text>
+            <text elif="{{active === 1}}" class="status-badge status-badge--upcoming">即将上课</text>
+            <text else class="status-badge status-badge--inactive">非活跃课程</text>
           </div>
-          <text class="progress-text">{{ progressPercent }}%</text>
+          <text class="course-time">{{ time }}</text>
+          <div class="progress-section">
+            <div class="progress-track">
+              <div class="progress-fill" style="width: {{ progressPercent }}%"></div>
+            </div>
+            <text class="progress-text">{{ progressPercent }}%</text>
+          </div>
         </div>
-        <div class="info-row">
-          <text class="info-label">教室</text>
-          <text class="info-value">{{ room }}</text>
+        <div class="course-info">
+          <div class="info-row">
+            <text class="info-label">教室</text>
+            <text class="info-value">{{ room }}</text>
+          </div>
+          <div class="info-row">
+            <text class="info-label">教师</text>
+            <text class="info-value">{{ teacher }}</text>
+          </div>
         </div>
-        <div class="info-row">
-          <text class="info-label">教师</text>
-          <text class="info-value">{{ teacher }}</text>
-        </div>
-        <div if="{{active !== 0}}" class="card-divider"></div>
-        <div if="{{remainText}}" class="remain-section">
-          <text class="remain-text">{{ remainText }}</text>
+        <div if="{{active !== 0}}" class="course-footer">
+          <div class="card-divider"></div>
+          <div if="{{remainText}}" class="remain-section">
+            <text class="remain-text">{{ remainText }}</text>
+          </div>
         </div>
       </div>
     </div>
@@ -81,17 +87,33 @@
 
 .content-area {
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   flex-grow: 1;
   padding: 0 16px;
 }
 
 .course-card {
   flex-direction: column;
-  width: 100%;
+  justify-content: space-between;
+  flex-grow: 1;
+  flex-shrink: 1;
+  width: auto;
   padding: 16px;
-  border-radius: 12px;
+  margin: 8px 0 72px;
+  border-radius: 16px;
   background-color: #2a2a2a;
+}
+
+.course-summary {
+  flex-direction: column;
+}
+
+.course-info {
+  flex-direction: column;
+}
+
+.course-footer {
+  flex-direction: column;
 }
 
 .card-header {
@@ -256,6 +278,8 @@
   .info-label {
     display: flex;
     font-size: 20px;
+    padding-right: 6px;
+    flex-shrink: 0;
   }
 
   .info-value {
