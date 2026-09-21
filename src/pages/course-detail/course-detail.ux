@@ -168,7 +168,7 @@
 .progress-track {
   height: 6px;
   flex-grow: 1;
-  background-color: #333333;
+  background-color: #4d4d4d;
   border-radius: 4px;
 }
 
@@ -304,18 +304,18 @@ import { engine, init, startTimers, stopTimers, getScheduleToday } from "../../c
 
 const TIME_REX = /^(\d{1,2})[：:](\d{1,2})[-~ ]+(\d{1,2})[：:](\d{1,2})$/
 
-function getMinutesNow(offset) {
+function getSecondsNow(offset) {
   const offsetSeconds = Number(offset) || 0
   const now = new Date(Date.now() - offsetSeconds * 1000)
-  return now.getHours() * 60 + now.getMinutes()
+  return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()
 }
 
 function parseTime(time) {
   const m = TIME_REX.exec(time)
   if (!m) return null
   return {
-    start: parseInt(m[1]) * 60 + parseInt(m[2]),
-    end: parseInt(m[3]) * 60 + parseInt(m[4])
+    start: parseInt(m[1]) * 3600 + parseInt(m[2]) * 60,
+    end: parseInt(m[3]) * 3600 + parseInt(m[4]) * 60
   }
 }
 
@@ -337,7 +337,7 @@ export default {
     loaded: false,
     currentTime: "",
     dateLabel: "",
-    progressPercent: 0,
+    progressPercent: "0.0",
     remainText: "",
     room: "",
     teacher: "",
@@ -425,37 +425,37 @@ export default {
 
     const timeInfo = parseTime(this.time)
     if (!timeInfo) {
-      this.progressPercent = 0
+      this.progressPercent = "0.0"
       this.remainText = ""
       return
     }
 
-    const nowMinutes = getMinutesNow(engine.setting.timeOffset || 0)
+    const nowSeconds = getSecondsNow(engine.setting.timeOffset || 0)
     let percent = 0
     let remainText = ""
 
     if (this.active === 2) {
-      let passed = nowMinutes - timeInfo.start
-      if (passed < 0) passed += 1440
+      let passed = nowSeconds - timeInfo.start
+      if (passed < 0) passed += 1440 * 60
       const duration = timeInfo.end - timeInfo.start
-      const totalDuration = duration > 0 ? duration : duration + 1440
-      percent = Math.round((passed / totalDuration) * 100)
-      let remainMinutes = timeInfo.end - nowMinutes
-      if (remainMinutes < 0) remainMinutes += 1440
-      remainMinutes = Math.ceil(remainMinutes)
+      const totalDuration = duration > 0 ? duration : duration + 1440 * 60
+      percent = (passed / totalDuration) * 100
+      let remainSeconds = timeInfo.end - nowSeconds
+      if (remainSeconds < 0) remainSeconds += 1440 * 60
+      const remainMinutes = Math.ceil(remainSeconds / 60)
       remainText = "还剩" + remainMinutes + "分钟下课"
     } else if (this.active === 1) {
       percent = 0
-      let remainMinutes = timeInfo.start - nowMinutes
-      if (remainMinutes < 0) remainMinutes += 1440
-      remainMinutes = Math.ceil(remainMinutes)
+      let remainSeconds = timeInfo.start - nowSeconds
+      if (remainSeconds < 0) remainSeconds += 1440 * 60
+      const remainMinutes = Math.ceil(remainSeconds / 60)
       remainText = remainMinutes + "分钟后上课"
     } else {
       percent = 0
       remainText = ""
     }
 
-    this.progressPercent = clamp(percent, 0, 100)
+    this.progressPercent = clamp(percent, 0, 100).toFixed(1)
     this.remainText = remainText
   }
 }
