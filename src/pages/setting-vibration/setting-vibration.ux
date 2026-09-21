@@ -1,16 +1,50 @@
 <template>
   <div class="page-container" onswipe="onSwipe">
-    <text class="page-title">震动提醒</text>
-    <div class="setting-card">
-      <div class="setting-row">
-        <div class="setting-copy">
-          <text class="setting-desc">上下课时震动提醒</text>
+    <scroll scroll-y="true" class="content-scroll">
+      <text class="page-title">震动提醒</text>
+      <div class="setting-card">
+        <div class="setting-row">
+          <div class="setting-copy">
+            <text class="setting-desc">上下课时震动提醒</text>
+          </div>
+          <div class="switch-wrap">
+            <switch class="setting-switch" checked="{{enabled}}" onchange="onToggle"></switch>
+          </div>
         </div>
-        <div class="switch-wrap">
-          <switch class="setting-switch" checked="{{enabled}}" onchange="onToggle"></switch>
+        <div class="mode-section">
+          <div
+            class="mode-option {{selectedMode === 'gentle' ? 'mode-option-selected' : ''}}"
+            onclick="onModeTap('gentle')"
+          >
+            <div class="mode-copy">
+              <text class="mode-title">轻柔</text>
+              <text class="mode-desc">长震一次</text>
+            </div>
+            <text if="{{selectedMode === 'gentle'}}" class="mode-check">✓</text>
+          </div>
+          <div
+            class="mode-option {{selectedMode === 'standard' ? 'mode-option-selected' : ''}}"
+            onclick="onModeTap('standard')"
+          >
+            <div class="mode-copy">
+              <text class="mode-title">标准</text>
+              <text class="mode-desc">短-长-短</text>
+            </div>
+            <text if="{{selectedMode === 'standard'}}" class="mode-check">✓</text>
+          </div>
+          <div
+            class="mode-option {{selectedMode === 'strong' ? 'mode-option-selected' : ''}}"
+            onclick="onModeTap('strong')"
+          >
+            <div class="mode-copy">
+              <text class="mode-title">强提醒</text>
+              <text class="mode-desc">长震两次</text>
+            </div>
+            <text if="{{selectedMode === 'strong'}}" class="mode-check">✓</text>
+          </div>
         </div>
       </div>
-    </div>
+    </scroll>
   </div>
 </template>
 
@@ -32,6 +66,12 @@
   font-weight: bold;
   margin-bottom: 24px;
   text-align: center;
+}
+
+.content-scroll {
+  flex-grow: 1;
+  width: 100%;
+  flex-direction: column;
 }
 
 .setting-card {
@@ -81,26 +121,86 @@
   height: 30px;
   flex-shrink: 0;
 }
+
+.mode-section {
+  flex-direction: column;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.mode-option {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 2px solid #4a4a4a;
+  border-radius: 10px;
+  background-color: #1a1a1a;
+}
+
+.mode-option-selected {
+  border-color: #4caf50;
+  background-color: #203420;
+}
+
+.mode-copy {
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.mode-title {
+  font-size: 20px;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.mode-desc {
+  font-size: 16px;
+  color: #aaaaaa;
+  margin-top: 2px;
+}
+
+.mode-check {
+  font-size: 24px;
+  color: #4caf50;
+  margin-left: 8px;
+}
 </style>
 
 <script>
 import router from "@system.router"
 import storage from "@system.storage"
 import prompt from "@system.prompt"
-import { getVibrationEnabled, setVibrationEnabled } from "../../common/userSettings"
+import {
+  getVibrationEnabled,
+  setVibrationEnabled,
+  getVibrationMode,
+  setVibrationMode,
+  normalizeVibrationMode
+} from "../../common/userSettings"
+
+const saveRequests = { toggle: 0, mode: 0 }
 
 export default {
   private: {
     enabled: false,
-    _toggleRequestId: 0
+    selectedMode: "standard"
   },
 
   async onInit() {
-    this.enabled = await getVibrationEnabled(storage)
+    await this.loadSettings()
   },
 
   async onShow() {
+    await this.loadSettings()
+  },
+
+  async loadSettings() {
     this.enabled = await getVibrationEnabled(storage)
+    this.selectedMode = await getVibrationMode(storage)
   },
 
   onSwipe(e) {
@@ -113,14 +213,55 @@ export default {
     const checked = e && e.checked !== undefined ? e.checked : e && e.value
     const nextValue = checked === true || checked === "true" || checked === "1"
     const previousValue = this.enabled
-    const requestId = this._toggleRequestId + 1
-    this._toggleRequestId = requestId
+    const requestId = ++saveRequests.toggle
     this.enabled = nextValue
     const saved = await setVibrationEnabled(storage, nextValue)
-    if (!saved && requestId === this._toggleRequestId) {
+    if (!saved && requestId === saveRequests.toggle) {
       this.enabled = previousValue
       prompt.showToast({ message: "保存失败", duration: 1000 })
     }
+  },
+
+  async onModeTap(mode) {
+    const nextMode = normalizeVibrationMode(mode)
+    this.previewVibration(nextMode)
+    if (nextMode === this.selectedMode) return
+    const previousMode = this.selectedMode
+    const requestId = ++saveRequests.mode
+    this.selectedMode = nextMode
+    const saved = await setVibrationMode(storage, nextMode)
+    if (!saved && requestId === saveRequests.mode) {
+      this.selectedMode = previousMode
+      prompt.showToast({ message: "保存失败", duration: 1000 })
+    }
+  },
+
+  previewVibration(mode) {
+    try {
+      const app = this.$app && this.$app.$def
+      if (!app || typeof app.previewVibrationPattern !== "function") {
+        throw new Error("Vibration preview entry unavailable")
+      }
+      app.previewVibrationPattern(mode)
+    } catch (e) {
+      console.error("setting-vibration: preview failed", e)
+      prompt.showToast({ message: "振动预览失败", duration: 1000 })
+    }
+  },
+
+  stopPreview() {
+    const app = this.$app && this.$app.$def
+    if (app && typeof app.stopVibrationPreview === "function") {
+      app.stopVibrationPreview()
+    }
+  },
+
+  onHide() {
+    this.stopPreview()
+  },
+
+  onDestroy() {
+    this.stopPreview()
   }
 }
 </script>

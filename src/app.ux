@@ -6,20 +6,39 @@ import vibrator from "@system.vibrator"
 import resident from "@system.resident"
 import protocol from "./common/protocol.json"
 import { init, applyConfigString, engine, startTimers, stopTimers, getScheduleToday } from "./common/scheduleEngine"
-import { getVibrationEnabled, onVibrationChange } from "./common/userSettings"
+import { createVibrationPlayer } from "./common/vibrationPlayer"
+import {
+  getVibrationEnabled,
+  getVibrationMode,
+  getVibrationPattern,
+  onVibrationChange,
+  onVibrationModeChange
+} from "./common/userSettings"
+
+const vibrationPlayer = createVibrationPlayer(vibrator)
+let pendingVibrationRequest = null
+
+function showPreviewError() {
+  prompt.showToast({ message: "振动预览失败", duration: 1000 })
+}
 
 export default {
   private: {
     _timer: null,
     _lastActiveIndex: -1,
     _vibrationLoaded: false,
+    _vibrationMode: "standard",
     _backgroundSnapshotReady: false,
     _unsubVibration: null,
+    _unsubVibrationMode: null,
     _isResident: false
   },
   async onCreate() {
     this._unsubVibration = onVibrationChange((enabled) => {
       this.updateVibrationAndResident(enabled)
+    })
+    this._unsubVibrationMode = onVibrationModeChange((mode) => {
+      this._vibrationMode = mode
     })
     await init(storage)
     await this.startBackgroundVibration()
@@ -62,16 +81,18 @@ export default {
 
   async onShow() {
     const enabled = await getVibrationEnabled(storage)
+    this._vibrationMode = await getVibrationMode(storage)
     this.updateVibrationAndResident(enabled)
   },
 
   async startBackgroundVibration() {
     await init(storage)
     const enabled = await getVibrationEnabled(storage)
+    this._vibrationMode = await getVibrationMode(storage)
     this.updateVibrationAndResident(enabled)
     startTimers()
     if (this._timer) clearInterval(this._timer)
-    this._timer = setInterval(async () => {
+    this._timer = setInterval(() => {
       const lessons = getScheduleToday(engine.schedule, engine.currentScheduleId, engine.today, engine.scheduleOverride)
       let activeIndex = -1
       for (let i = 0; i < lessons.length; i++) {
@@ -85,28 +106,51 @@ export default {
       const lessonChanged = activeIndex !== this._lastActiveIndex
       const hadActiveLesson = this._lastActiveIndex >= 0
       const hasActiveLesson = activeIndex >= 0
-      if (lessonChanged && (hadActiveLesson || hasActiveLesson) && this._vibrationLoaded) {
-        try {
-          const sleep = (time) => {return new Promise(resolve => setTimeout(resolve, time));}
-          for(let i = 0; i < 3; i++){
-            vibrator.vibrate({mode: 'short'})
-            await sleep(100)
-            vibrator.vibrate({mode: 'long'})
-            await sleep(100)
-            vibrator.vibrate({mode: 'short'})
-            await sleep(200)
-          }
-        } catch (e) {
-          console.error("app: vibrator failed", e)
-        }
-      }
       this._lastActiveIndex = activeIndex
+      if (lessonChanged && (hadActiveLesson || hasActiveLesson) && this._vibrationLoaded) {
+        this.playVibrationPattern()
+      }
     }, 1000)
   },
 
+  playVibrationPattern() {
+    if (!this._vibrationLoaded || pendingVibrationRequest || vibrationPlayer.isPlaying()) return
+    const request = {}
+    pendingVibrationRequest = request
+    return this.runVibrationPattern(request)
+  },
+
+  async runVibrationPattern(request) {
+    try {
+      // 页面和应用可能由不同模块实例加载，切换模式时以存储值为准。
+      const mode = await getVibrationMode(storage)
+      if (pendingVibrationRequest !== request || !this._vibrationLoaded) return
+      this._vibrationMode = mode
+      vibrationPlayer.play(getVibrationPattern(mode), "reminder")
+    } catch (e) {
+      console.error("app: vibrator failed", e)
+    } finally {
+      if (pendingVibrationRequest === request) pendingVibrationRequest = null
+    }
+  },
+
+  previewVibrationPattern(mode) {
+    pendingVibrationRequest = null
+    return vibrationPlayer.play(getVibrationPattern(mode), "preview", showPreviewError)
+  },
+
+  stopVibrationPreview() {
+    vibrationPlayer.stop("preview")
+  },
+
   updateVibrationAndResident(enabled) {
-    this._vibrationLoaded = !!enabled
-    if (this._vibrationLoaded) {
+    const nextEnabled = !!enabled
+    if (!nextEnabled) {
+      pendingVibrationRequest = null
+      vibrationPlayer.stop("reminder")
+    }
+    this._vibrationLoaded = nextEnabled
+    if (nextEnabled) {
       this.startResident()
     } else {
       this.stopResident()
@@ -142,11 +186,20 @@ export default {
   },
 
   onDestroy() {
-    if (this._timer) clearInterval(this._timer)
+    if (this._timer) {
+      clearInterval(this._timer)
+      this._timer = null
+    }
+    pendingVibrationRequest = null
+    vibrationPlayer.stop()
     stopTimers()
     if (this._unsubVibration) {
       this._unsubVibration()
       this._unsubVibration = null
+    }
+    if (this._unsubVibrationMode) {
+      this._unsubVibrationMode()
+      this._unsubVibrationMode = null
     }
     this.stopResident()
   }
