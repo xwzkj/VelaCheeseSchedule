@@ -11,7 +11,7 @@
       <div class="course-card">
         <div class="course-summary">
           <div class="card-header">
-            <text class="course-name">{{ name }}</text>
+            <marquee id="course-name-marquee" class="course-name" scrollamount="{{8}}" loop="{{-1}}" text-offset="40">{{ name }}</marquee>
             <text if="{{active === 2}}" class="status-badge status-badge--active">上课中</text>
             <text elif="{{active === 1}}" class="status-badge status-badge--upcoming">即将上课</text>
             <text else class="status-badge status-badge--inactive">非活跃课程</text>
@@ -123,12 +123,13 @@
 }
 
 .course-name {
+  width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0px;
   font-size: 22px;
   color: #ffffff;
   font-weight: bold;
-  lines: 1;
-  text-overflow: ellipsis;
-  flex-shrink: 1;
 }
 
 .status-badge {
@@ -192,19 +193,22 @@
 }
 
 .info-row {
-  flex-direction: row;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   margin-top: 12px;
 }
 
 .info-label {
-  display: none;
+  display: flex;
+  font-size: 20px;
   color: #aaaaaa;
+  text-align: center;
+  margin-bottom: 2px;
 }
 
 .info-value {
-  font-size: 16px;
+  font-size: 18px;
   color: #ffffff;
   text-align: center;
 }
@@ -271,6 +275,7 @@
   }
 
   .info-row {
+    flex-direction: row;
     justify-content: space-between;
     margin-top: 18px;
   }
@@ -279,6 +284,7 @@
     display: flex;
     font-size: 20px;
     padding-right: 6px;
+    margin-bottom: 0;
     flex-shrink: 0;
   }
 
@@ -341,7 +347,9 @@ export default {
     remainText: "",
     room: "",
     teacher: "",
-    _timer: null
+    _timer: null,
+    _marqueeTimer: null,
+    _marqueeStarted: false
   },
 
   async onInit() {
@@ -363,8 +371,11 @@ export default {
     const tryLoad = () => {
       this.loadLesson()
       this.refreshDisplay()
-      if (this.time && !this.loaded) {
-        this.loaded = true
+      if (this.time) {
+        if (!this.loaded) {
+          this.loaded = true
+        }
+        this.startCourseMarquee()
       }
     }
     this._timer = setInterval(tryLoad, 1000)
@@ -376,6 +387,11 @@ export default {
       clearInterval(this._timer)
       this._timer = null
     }
+    if (this._marqueeTimer) {
+      clearTimeout(this._marqueeTimer)
+      this._marqueeTimer = null
+    }
+    this._marqueeStarted = false
     stopTimers()
   },
 
@@ -384,6 +400,10 @@ export default {
       clearInterval(this._timer)
       this._timer = null
     }
+    if (this._marqueeTimer) {
+      clearTimeout(this._marqueeTimer)
+      this._marqueeTimer = null
+    }
     stopTimers()
   },
 
@@ -391,6 +411,20 @@ export default {
     if (e && e.direction === "right") {
       router.back()
     }
+  },
+
+  startCourseMarquee() {
+    if (this._marqueeStarted || this._marqueeTimer) {
+      return
+    }
+    this._marqueeTimer = setTimeout(() => {
+      this._marqueeTimer = null
+      const marquee = this.$element("course-name-marquee")
+      if (marquee && marquee.start) {
+        marquee.start()
+        this._marqueeStarted = true
+      }
+    }, 0)
   },
 
   loadLesson() {
