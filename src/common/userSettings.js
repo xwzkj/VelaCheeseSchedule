@@ -16,7 +16,7 @@ const VIBRATION_MODE_OPTIONS = [
   {
     id: 'strong',
     title: '强提醒',
-    description: '连续两次长震，更不易错过'
+    description: '连续三次长震，更不易错过'
   }
 ]
 
@@ -31,6 +31,7 @@ const VIBRATION_PATTERNS = {
     { mode: 'short', pause: 0 }
   ],
   strong: [
+    { mode: 'long', pause: 400 },
     { mode: 'long', pause: 400 },
     { mode: 'long', pause: 0 }
   ]

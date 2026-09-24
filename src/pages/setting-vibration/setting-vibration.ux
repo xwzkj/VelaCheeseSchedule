@@ -38,7 +38,7 @@
           >
             <div class="mode-copy">
               <text class="mode-title">强提醒</text>
-              <text class="mode-desc">长震两次</text>
+              <text class="mode-desc">长震三次</text>
             </div>
             <text if="{{selectedMode === 'strong'}}" class="mode-check">✓</text>
           </div>
