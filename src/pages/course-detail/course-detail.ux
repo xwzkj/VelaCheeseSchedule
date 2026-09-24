@@ -387,11 +387,6 @@ export default {
       clearInterval(this._timer)
       this._timer = null
     }
-    if (this._marqueeTimer) {
-      clearTimeout(this._marqueeTimer)
-      this._marqueeTimer = null
-    }
-    this._marqueeStarted = false
     stopTimers()
   },
 
@@ -404,6 +399,7 @@ export default {
       clearTimeout(this._marqueeTimer)
       this._marqueeTimer = null
     }
+    this.stopCourseMarquee()
     stopTimers()
   },
 
@@ -425,6 +421,14 @@ export default {
         this._marqueeStarted = true
       }
     }, 0)
+  },
+
+  stopCourseMarquee() {
+    const marquee = this.$element("course-name-marquee")
+    if (marquee && marquee.stop) {
+      marquee.stop()
+    }
+    this._marqueeStarted = false
   },
 
   loadLesson() {

@@ -306,7 +306,6 @@ export default {
       this.refreshDisplay()
     }, 1000)
     this.refreshDisplay()
-    this.scheduleLessonMarquees()
   },
 
   onHide() {
@@ -318,13 +317,6 @@ export default {
       clearTimeout(this._scrollTimer)
       this._scrollTimer = null
     }
-    if (this._marqueeTimer) {
-      clearTimeout(this._marqueeTimer)
-      this._marqueeTimer = null
-    }
-    this.stopCountdownMarquee()
-    this._countdownMarqueeName = ""
-    this.stopLessonMarquees()
     this._initialScrolled = false
   },
 

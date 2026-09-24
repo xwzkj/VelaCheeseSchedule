@@ -212,6 +212,7 @@ export default {
     lessons: [],
     selWeekIndex: 0,
     selDayIndex: 0,
+    _lastLessonsKey: "",
     _marqueeTimer: null
   },
 
@@ -228,14 +229,6 @@ export default {
 
   onShow() {
     this.refreshLessons()
-  },
-
-  onHide() {
-    if (this._marqueeTimer) {
-      clearTimeout(this._marqueeTimer)
-      this._marqueeTimer = null
-    }
-    this.stopLessonMarquees()
   },
 
   onDestroy() {
@@ -355,6 +348,16 @@ export default {
       dayKey,
       override && override.date ? override : { date: "1970-01-01", override: [] }
     )
+    let lessonsKey = this.selWeekIndex + ":" + this.selDayIndex + ":"
+    lessonsKey += override && override.date ? override.date : "default"
+    for (let i = 0; i < lessons.length; i++) {
+      const lesson = lessons[i]
+      lessonsKey += "|" + (lesson.name || "") + "~" + (lesson.time || "") + "~" + (lesson.active || 0) + "~" + (lesson.isDivider ? 1 : 0)
+    }
+    if (lessonsKey === this._lastLessonsKey) {
+      return
+    }
+    this._lastLessonsKey = lessonsKey
     this.lessons = lessons.map((lesson, index) => ({
       ...lesson,
       id: this.selWeekIndex + ":" + this.selDayIndex + ":" + index,
