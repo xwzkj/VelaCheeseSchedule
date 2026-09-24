@@ -180,12 +180,12 @@ function getScheduleToday(schedule, scheduleId, today, override) {
 }
 
 /**
- * 获取倒计时文本
+ * 获取倒计时信息
  * @param {Lesson[]} lessons
  * @param {number} timeOffset
- * @returns {string}
+ * @returns {{name: string, text: string}}
  */
-function getCountdownText(lessons, timeOffset) {
+function getCountdownInfo(lessons, timeOffset) {
   const nowTime = getMinutesNow(timeOffset)
   const rex = /^(\d{1,2})[：:](\d{1,2})[-~ ]+(\d{1,2})[：:](\d{1,2})$/
   for (let i = 0; i < lessons.length; i++) {
@@ -197,8 +197,8 @@ function getCountdownText(lessons, timeOffset) {
         let remain = end - nowTime
         if (remain < 0) remain += 1440
         remain = Math.ceil(remain)
-        if (remain <= 0) return ''
-        return lessons[i].name + '\n还剩' + remain + '分钟'
+        if (remain <= 0) return { name: '', text: '' }
+        return { name: lessons[i].name, text: '还剩' + remain + '分钟' }
       }
     }
   }
@@ -211,12 +211,23 @@ function getCountdownText(lessons, timeOffset) {
         let remain = start - nowTime
         if (remain < 0) remain += 1440
         remain = Math.ceil(remain)
-        if (remain <= 0) return ''
-        return '课间休息\n还剩' + remain + '分钟'
+        if (remain <= 0) return { name: '', text: '' }
+        return { name: '课间休息', text: '还剩' + remain + '分钟' }
       }
     }
   }
-  return '当前没有课程'
+  return { name: '', text: '当前没有课程' }
+}
+
+/**
+ * 获取倒计时文本
+ * @param {Lesson[]} lessons
+ * @param {number} timeOffset
+ * @returns {string}
+ */
+function getCountdownText(lessons, timeOffset) {
+  const info = getCountdownInfo(lessons, timeOffset)
+  return info.name ? info.name + '\n' + info.text : info.text
 }
 
 /**
@@ -693,6 +704,7 @@ export {
   setFirstWeek,
   csesToConfig,
   getScheduleToday,
+  getCountdownInfo,
   getCountdownText,
   startTimers,
   stopTimers,

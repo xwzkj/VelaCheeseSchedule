@@ -16,6 +16,15 @@
         <text class="date-display">{{ dateLabel }}</text>
       </div>
       <div class="countdown-bar">
+        <div if="{{countdownName}}" class="countdown-name-wrap">
+          <marquee
+            id="countdown-name-marquee"
+            class="countdown-name"
+            scrollamount="{{20}}"
+            loop="{{-1}}"
+            text-offset="40"
+          >{{ countdownName }}</marquee>
+        </div>
         <text class="countdown-text">{{ countdownText }}</text>
       </div>
       <div class="scroll-container">
@@ -108,7 +117,7 @@
 }
 
 .countdown-bar {
-  flex-direction: row;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 8px 16px;
@@ -117,12 +126,24 @@
   background-color: #2a2a2a;
 }
 
+.countdown-name-wrap {
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.countdown-name {
+  width: 100%;
+  font-size: 20px;
+  color: #ffffff;
+  text-align: center;
+}
+
 .countdown-text {
   font-size: 20px;
   color: #ffffff;
   text-align: center;
-  lines: 2;
-  text-overflow: ellipsis;
 }
 
 /* 中间课程列表：占据剩余空间并独立滚动 */
@@ -242,7 +263,7 @@ import {
   startTimers,
   stopTimers,
   getScheduleToday,
-  getCountdownText,
+  getCountdownInfo,
   onUpdate
 } from "../../common/scheduleEngine"
 
@@ -251,6 +272,7 @@ export default {
     inited: false,
     lessons: [],
     currentScheduleId: 0,
+    countdownName: "",
     countdownText: "",
     currentTime: "",
     dateLabel: "",
@@ -261,7 +283,9 @@ export default {
     _lastActiveIndex: -1,
     _initialScrolled: false,
     _scrollTimer: null,
-    _marqueeTimer: null
+    _marqueeTimer: null,
+    _countdownMarqueeName: "",
+    _countdownMarqueeTimer: null
   },
 
   onInit() {
@@ -298,6 +322,8 @@ export default {
       clearTimeout(this._marqueeTimer)
       this._marqueeTimer = null
     }
+    this.stopCountdownMarquee()
+    this._countdownMarqueeName = ""
     this.stopLessonMarquees()
     this._initialScrolled = false
   },
@@ -316,6 +342,7 @@ export default {
       clearTimeout(this._marqueeTimer)
       this._marqueeTimer = null
     }
+    this.stopCountdownMarquee()
     this.stopLessonMarquees()
     if (this._unsubscribe) {
       this._unsubscribe()
@@ -382,6 +409,30 @@ export default {
         scroll.scrollTo({ top: scrollTop, behavior: 'smooth' })
       }
     }, 200)
+  },
+
+  scheduleCountdownMarquee() {
+    if (this._countdownMarqueeTimer) {
+      clearTimeout(this._countdownMarqueeTimer)
+    }
+    this._countdownMarqueeTimer = setTimeout(() => {
+      this._countdownMarqueeTimer = null
+      const marquee = this.$element("countdown-name-marquee")
+      if (marquee && marquee.start) {
+        marquee.start()
+      }
+    }, 200)
+  },
+
+  stopCountdownMarquee() {
+    if (this._countdownMarqueeTimer) {
+      clearTimeout(this._countdownMarqueeTimer)
+      this._countdownMarqueeTimer = null
+    }
+    const marquee = this.$element("countdown-name-marquee")
+    if (marquee && marquee.stop) {
+      marquee.stop()
+    }
   },
 
   scheduleLessonMarquees() {
@@ -486,7 +537,16 @@ export default {
       this._lastActiveIndex = -1
     }
 
-    this.countdownText = getCountdownText(this.lessons, engine.setting.timeOffset)
+    const countdownInfo = getCountdownInfo(this.lessons, engine.setting.timeOffset)
+    this.countdownText = countdownInfo.text
+    if (countdownInfo.name !== this._countdownMarqueeName) {
+      this.stopCountdownMarquee()
+      this._countdownMarqueeName = countdownInfo.name
+      this.countdownName = countdownInfo.name
+      if (countdownInfo.name) {
+        this.scheduleCountdownMarquee()
+      }
+    }
     this.currentScheduleId = engine.currentScheduleId
     const now = new Date()
     this.currentTime =
