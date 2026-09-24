@@ -20,21 +20,21 @@
       </div>
       <div class="scroll-container">
         <scroll id="lessonScroll" scroll-y="true" class="lesson-scroll">
-          <block for="{{lessons}}" tid="id">
-          <div if="{{$item.isDivider}}" class="divider-line"></div>
-          <div
-            else
-            class="lesson-item {{$item.active === 2 ? 'lesson-active' : ($item.active === 1 ? 'lesson-upcoming' : '')}}"
-            onclick="onLessonTap($idx)"
-          >
-            <div class="lesson-content">
-              <text class="lesson-name">{{ $item.name }}</text>
-              <text class="lesson-time">{{ $item.time }}</text>
+          <div class="lesson-list">
+            <div
+              for="{{lessons}}"
+              tid="id"
+              class="{{$item.isDivider ? 'divider-line' : 'lesson-item'}} {{$item.isDivider ? '' : ($item.active === 2 ? 'lesson-active' : ($item.active === 1 ? 'lesson-upcoming' : ''))}}"
+              onclick="onLessonTap($idx)"
+            >
+              <div if="{{!$item.isDivider}}" class="lesson-content">
+                <marquee id="{{$item.marqueeId}}" class="lesson-name" scrollamount="{{20}}" loop="{{-1}}" text-offset="40">{{ $item.name }}</marquee>
+                <text class="lesson-time">{{ $item.time }}</text>
+              </div>
+              <text if="{{!$item.isDivider && $item.active === 2}}" class="badge-now">当前</text>
+              <text elif="{{!$item.isDivider && $item.active === 1}}" class="badge-next">下节</text>
             </div>
-            <text if="{{$item.active === 2}}" class="badge-now">上课</text>
-            <text elif="{{$item.active === 1}}" class="badge-next">下一节</text>
           </div>
-        </block>
         </scroll>
       </div>
       <div class="bottom-bar" onclick="onFooterTap">
@@ -143,6 +143,12 @@
   padding-bottom: 6px;
 }
 
+.lesson-list {
+  flex-direction: column;
+  width: 100%;
+  flex-grow: 1;
+}
+
 .lesson-item {
   flex-direction: row;
   justify-content: space-between;
@@ -164,14 +170,17 @@
 
 .lesson-content {
   flex-direction: column;
+  width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0px;
 }
 
 .lesson-name {
+  width: 100%;
   font-size: 22px;
   color: #ffffff;
   font-weight: bold;
-  lines: 1;
-  text-overflow: ellipsis;
 }
 
 .lesson-time {
@@ -184,6 +193,12 @@
   height: 2px;
   margin: 6px 24px;
   background-color: #444444;
+}
+
+.badge-now,
+.badge-next {
+  margin-left: 12px;
+  flex-shrink: 0;
 }
 
 .badge-now {
@@ -245,7 +260,8 @@ export default {
     _lastScheduleKey: "",
     _lastActiveIndex: -1,
     _initialScrolled: false,
-    _scrollTimer: null
+    _scrollTimer: null,
+    _marqueeTimer: null
   },
 
   onInit() {
@@ -266,6 +282,7 @@ export default {
       this.refreshDisplay()
     }, 1000)
     this.refreshDisplay()
+    this.scheduleLessonMarquees()
   },
 
   onHide() {
@@ -277,6 +294,11 @@ export default {
       clearTimeout(this._scrollTimer)
       this._scrollTimer = null
     }
+    if (this._marqueeTimer) {
+      clearTimeout(this._marqueeTimer)
+      this._marqueeTimer = null
+    }
+    this.stopLessonMarquees()
     this._initialScrolled = false
   },
 
@@ -290,6 +312,11 @@ export default {
       clearTimeout(this._scrollTimer)
       this._scrollTimer = null
     }
+    if (this._marqueeTimer) {
+      clearTimeout(this._marqueeTimer)
+      this._marqueeTimer = null
+    }
+    this.stopLessonMarquees()
     if (this._unsubscribe) {
       this._unsubscribe()
       this._unsubscribe = null
@@ -357,6 +384,42 @@ export default {
     }, 200)
   },
 
+  scheduleLessonMarquees() {
+    if (this._marqueeTimer) {
+      clearTimeout(this._marqueeTimer)
+    }
+    this._marqueeTimer = setTimeout(() => {
+      this._marqueeTimer = null
+      this.startLessonMarquees()
+    }, 200)
+  },
+
+  startLessonMarquees() {
+    for (let i = 0; i < this.lessons.length; i++) {
+      const lesson = this.lessons[i]
+      if (!lesson || lesson.isDivider || !lesson.marqueeId) {
+        continue
+      }
+      const marquee = this.$element(lesson.marqueeId)
+      if (marquee && marquee.start) {
+        marquee.start()
+      }
+    }
+  },
+
+  stopLessonMarquees() {
+    for (let i = 0; i < this.lessons.length; i++) {
+      const lesson = this.lessons[i]
+      if (!lesson || lesson.isDivider || !lesson.marqueeId) {
+        continue
+      }
+      const marquee = this.$element(lesson.marqueeId)
+      if (marquee && marquee.stop) {
+        marquee.stop()
+      }
+    }
+  },
+
   refreshDisplay() {
     const scheduleKey = [engine.currentScheduleId, engine.today, engine.scheduleOverride.date].join(
       "|"
@@ -403,8 +466,10 @@ export default {
       this._lastScheduleKey = scheduleKey
       this.lessons = currentLessons.map((lesson, index) => ({
         ...lesson,
-        id: scheduleKey + ":" + index
+        id: scheduleKey + ":" + index,
+        marqueeId: "home-lesson-name-" + index
       }))
+      this.scheduleLessonMarquees()
       // 当前课程发生变化时滚动到当前课程，并露出上一节
       if (activeIndex !== -1 && (activeIndex !== this._lastActiveIndex || !this._initialScrolled)) {
         this._lastActiveIndex = activeIndex

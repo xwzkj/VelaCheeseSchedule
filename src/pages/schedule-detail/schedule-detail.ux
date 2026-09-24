@@ -21,18 +21,22 @@
     </div>
     <div class="scroll-container">
       <scroll scroll-y="true" class="lesson-scroll">
-        <div if="{{lessons.length === 0}}" class="empty-wrap">
-          <text class="empty-text">今日无课</text>
-        </div>
-        <block for="{{lessons}}" tid="id">
-          <div if="{{$item.isDivider}}" class="divider-line"></div>
-          <div else class="lesson-item" onclick="onLessonTap($idx)">
-            <div class="lesson-content">
-              <text class="lesson-name">{{ $item.name }}</text>
+        <div class="lesson-list">
+          <div if="{{lessons.length === 0}}" class="empty-wrap">
+            <text class="empty-text">今日无课</text>
+          </div>
+          <div
+            for="{{lessons}}"
+            tid="id"
+            class="{{$item.isDivider ? 'divider-line' : 'lesson-item'}}"
+            onclick="onLessonTap($idx)"
+          >
+            <div if="{{!$item.isDivider}}" class="lesson-content">
+              <marquee id="{{$item.marqueeId}}" class="lesson-name" scrollamount="{{20}}" loop="{{-1}}" text-offset="40">{{ $item.name }}</marquee>
               <text class="lesson-time">{{ $item.time }}</text>
             </div>
           </div>
-        </block>
+        </div>
       </scroll>
     </div>
     <div class="bottom-bar" onclick="onAboutTap">
@@ -115,7 +119,12 @@
   right: 0;
   bottom: 0;
   flex-direction: column;
-  padding-bottom: 48px;
+}
+
+.lesson-list {
+  flex-direction: column;
+  width: 100%;
+  flex-grow: 1;
 }
 
 .empty-wrap {
@@ -142,9 +151,14 @@
 
 .lesson-content {
   flex-direction: column;
+  width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0px;
 }
 
 .lesson-name {
+  width: 100%;
   font-size: 22px;
   color: #ffffff;
   font-weight: bold;
@@ -197,7 +211,8 @@ export default {
     dayOptions: [],
     lessons: [],
     selWeekIndex: 0,
-    selDayIndex: 0
+    selDayIndex: 0,
+    _marqueeTimer: null
   },
 
   async onInit() {
@@ -213,6 +228,22 @@ export default {
 
   onShow() {
     this.refreshLessons()
+  },
+
+  onHide() {
+    if (this._marqueeTimer) {
+      clearTimeout(this._marqueeTimer)
+      this._marqueeTimer = null
+    }
+    this.stopLessonMarquees()
+  },
+
+  onDestroy() {
+    if (this._marqueeTimer) {
+      clearTimeout(this._marqueeTimer)
+      this._marqueeTimer = null
+    }
+    this.stopLessonMarquees()
   },
 
   buildOptions() {
@@ -279,6 +310,42 @@ export default {
       "课表" + (this.selWeekIndex + 1) + " 周" + DAY_LABELS[this.selDayIndex]
   },
 
+  scheduleLessonMarquees() {
+    if (this._marqueeTimer) {
+      clearTimeout(this._marqueeTimer)
+    }
+    this._marqueeTimer = setTimeout(() => {
+      this._marqueeTimer = null
+      this.startLessonMarquees()
+    }, 200)
+  },
+
+  startLessonMarquees() {
+    for (let i = 0; i < this.lessons.length; i++) {
+      const lesson = this.lessons[i]
+      if (!lesson || lesson.isDivider || !lesson.marqueeId) {
+        continue
+      }
+      const marquee = this.$element(lesson.marqueeId)
+      if (marquee && marquee.start) {
+        marquee.start()
+      }
+    }
+  },
+
+  stopLessonMarquees() {
+    for (let i = 0; i < this.lessons.length; i++) {
+      const lesson = this.lessons[i]
+      if (!lesson || lesson.isDivider || !lesson.marqueeId) {
+        continue
+      }
+      const marquee = this.$element(lesson.marqueeId)
+      if (marquee && marquee.stop) {
+        marquee.stop()
+      }
+    }
+  },
+
   refreshLessons() {
     const dayKey = WEEKDAYS[this.selDayIndex]
     const override = engine.scheduleOverride
@@ -290,8 +357,10 @@ export default {
     )
     this.lessons = lessons.map((lesson, index) => ({
       ...lesson,
-      id: this.selWeekIndex + ":" + this.selDayIndex + ":" + index
+      id: this.selWeekIndex + ":" + this.selDayIndex + ":" + index,
+      marqueeId: "schedule-lesson-name-" + index
     }))
+    this.scheduleLessonMarquees()
   }
 }
 </script>
