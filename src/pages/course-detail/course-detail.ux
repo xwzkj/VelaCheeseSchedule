@@ -12,17 +12,18 @@
         <div class="course-summary">
           <div class="card-header">
             <marquee id="course-name-marquee" class="course-name" scrollamount="{{20}}" loop="{{-1}}" text-offset="40">{{ name }}</marquee>
-            <text if="{{active === 2}}" class="status-badge status-badge--active">上课中</text>
-            <text elif="{{active === 1}}" class="status-badge status-badge--upcoming">即将上课</text>
-            <text else class="status-badge status-badge--inactive">非活跃课程</text>
+            <text if="{{active === 2}}" class="status-badge status-badge--active">当前</text>
+            <text elif="{{active === 1}}" class="status-badge status-badge--upcoming">下节</text>
+            <!-- <text else class="status-badge status-badge--inactive">非活跃</text> -->
           </div>
           <text class="course-time">{{ time }}</text>
-          <div class="progress-section">
+          <div class="progress-section" if="{{active > 0}}">
             <div class="progress-track">
               <div class="progress-fill" style="width: {{ progressPercent }}%"></div>
             </div>
             <text class="progress-text">{{ progressPercent }}%</text>
           </div>
+          <div else class="card-divider"></div>
         </div>
         <div class="course-info">
           <div class="info-row">
@@ -34,10 +35,11 @@
             <text class="info-value">{{ teacher }}</text>
           </div>
         </div>
-        <div if="{{active !== 0}}" class="course-footer">
+        <div class="course-footer">
           <div class="card-divider"></div>
-          <div if="{{remainText}}" class="remain-section">
-            <text class="remain-text">{{ remainText }}</text>
+          <div class="remain-section">
+            <text if="{{remainText}}" class="remain-text">{{ remainText }}</text>
+            <text elif="{{active === 0}}" class="remain-text">非活跃课程</text>
           </div>
         </div>
       </div>
@@ -116,6 +118,7 @@
   flex-direction: column;
 }
 
+
 .card-header {
   flex-direction: row;
   justify-content: space-between;
@@ -150,9 +153,9 @@
   background-color: #e65100;
 }
 
-.status-badge--inactive {
+/* .status-badge--inactive {
   background-color: #666666;
-}
+} */
 
 .course-time {
   font-size: 16px;
@@ -222,7 +225,7 @@
 
 .remain-text {
   font-size: 16px;
-  color: #ffffff;
+  color: #aaaaaa;
   text-align: center;
 }
 
