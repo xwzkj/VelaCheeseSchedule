@@ -453,9 +453,8 @@ export default {
       this.teacher = (lesson.teacher || "").trim() || "未知教师"
     }
     const rawLesson = daySchedule.lessons[this.lessonIndex]
-    if (rawLesson) {
-      this.active = parseInt(rawLesson.active, 10) || 0
-    }
+    const isCurrentDay = this.scheduleId === engine.currentScheduleId && this.dayKey === engine.today
+    this.active = rawLesson && isCurrentDay ? parseInt(rawLesson.active, 10) || 0 : 0
   },
 
   refreshDisplay() {

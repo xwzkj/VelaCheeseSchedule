@@ -3,7 +3,7 @@
     <div if="{{!inited}}" class="loading-wrap">
       <text class="loading-text">加载中...</text>
     </div>
-    <div elif="{{lessons.length === 0}}" class="empty-wrap">
+    <div elif="{{!hasLessons && !showingTomorrow}}" class="empty-wrap">
       <image class="about-icon" src="/common/about.png" onclick="onAboutTap"></image>
       <text class="empty-text">今日无课</text>
       <div class="bottom-bar" onclick="onFooterTap">
@@ -27,7 +27,10 @@
         </div>
         <text class="countdown-text">{{ countdownText }}</text>
       </div>
-      <div class="scroll-container">
+      <div if="{{!hasLessons}}" class="tomorrow-empty-wrap">
+        <text class="empty-text">明日无课</text>
+      </div>
+      <div else class="scroll-container">
         <scroll id="lessonScroll" scroll-y="true" class="lesson-scroll">
           <div class="lesson-list">
             <div
@@ -84,6 +87,13 @@
 .empty-text {
   font-size: 24px;
   color: #aaaaaa;
+}
+
+.tomorrow-empty-wrap {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
 }
 
 .schedule-wrap {
@@ -262,16 +272,21 @@ import {
   init,
   startTimers,
   stopTimers,
-  getScheduleToday,
+  getHomeSchedule,
   getCountdownInfo,
   onUpdate
 } from "../../common/scheduleEngine"
+
+const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
 export default {
   private: {
     inited: false,
     lessons: [],
+    hasLessons: false,
     currentScheduleId: 0,
+    currentDayKey: "",
+    showingTomorrow: false,
     countdownName: "",
     countdownText: "",
     currentTime: "",
@@ -344,12 +359,11 @@ export default {
   },
 
   onFooterTap() {
-    const day = new Date().getDay()
     router.push({
       uri: "/pages/schedule-detail",
       params: {
         weekIndex: this.currentScheduleId,
-        dayIndex: day === 0 ? 6 : day - 1
+        dayIndex: WEEKDAYS.indexOf(this.currentDayKey)
       }
     })
   },
@@ -368,8 +382,8 @@ export default {
     router.push({
       uri: "/pages/course-detail",
       params: {
-        scheduleId: engine.currentScheduleId,
-        dayKey: engine.today,
+        scheduleId: this.currentScheduleId,
+        dayKey: this.currentDayKey,
         lessonIndex: index
       }
     })
@@ -464,17 +478,19 @@ export default {
   },
 
   refreshDisplay() {
-    const scheduleKey = [engine.currentScheduleId, engine.today, engine.scheduleOverride.date].join(
+    const homeSchedule = getHomeSchedule()
+    this.currentScheduleId = homeSchedule.scheduleId
+    this.currentDayKey = homeSchedule.dayKey
+    this.showingTomorrow = homeSchedule.isTomorrow
+    this.hasLessons = homeSchedule.lessons.some(lesson => !lesson.isDivider)
+    const scheduleKey = [homeSchedule.scheduleId, homeSchedule.dayKey, homeSchedule.isTomorrow, engine.scheduleOverride.date].join(
       "|"
     )
-    const currentLessons = getScheduleToday(
-      engine.schedule,
-      engine.currentScheduleId,
-      engine.today,
-      engine.scheduleOverride
-    )
+    const currentLessons = homeSchedule.lessons
 
-    let shouldRebuild = this._lastScheduleKey !== scheduleKey
+    const scheduleChanged = this._lastScheduleKey !== scheduleKey
+    let shouldRebuild = scheduleChanged
+    if (scheduleChanged) this._initialScrolled = false
     let activeIndex = -1
     if (!shouldRebuild && currentLessons.length !== this.lessons.length) {
       shouldRebuild = true
@@ -513,6 +529,8 @@ export default {
         marqueeId: "home-lesson-name-" + index
       }))
       this.scheduleLessonMarquees()
+      // 切换展示日期后回到列表顶部，避免沿用今天最后一节课的滚动位置。
+      if (scheduleChanged && activeIndex === -1) this.scrollToActive(0)
       // 当前课程发生变化时滚动到当前课程，并露出上一节
       if (activeIndex !== -1 && (activeIndex !== this._lastActiveIndex || !this._initialScrolled)) {
         this._lastActiveIndex = activeIndex
@@ -529,7 +547,9 @@ export default {
       this._lastActiveIndex = -1
     }
 
-    const countdownInfo = getCountdownInfo(this.lessons, engine.setting.timeOffset)
+    const countdownInfo = this.showingTomorrow
+      ? { name: "今日课程已结束", text: "以下是明日课程" }
+      : getCountdownInfo(this.lessons, engine.setting.timeOffset)
     this.countdownText = countdownInfo.text
     if (countdownInfo.name !== this._countdownMarqueeName) {
       this.stopCountdownMarquee()
@@ -539,13 +559,13 @@ export default {
         this.scheduleCountdownMarquee()
       }
     }
-    this.currentScheduleId = engine.currentScheduleId
     const now = new Date()
     this.currentTime =
       String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0")
-    this.dateLabel = now.getMonth() + 1 + "/" + now.getDate()
+    const displayDate = homeSchedule.date
+    this.dateLabel = (this.showingTomorrow ? "明日 " : "") + (displayDate.getMonth() + 1) + "/" + displayDate.getDate()
     const weekNames = ["日", "一", "二", "三", "四", "五", "六"]
-    this.footerLabel = "课表" + (engine.currentScheduleId + 1) + " 周" + weekNames[now.getDay()]
+    this.footerLabel = "课表" + (this.currentScheduleId + 1) + " 周" + weekNames[displayDate.getDay()]
   }
 }
 </script>

@@ -180,6 +180,54 @@ function getScheduleToday(schedule, scheduleId, today, override) {
 }
 
 /**
+ * 判断指定日期的所有课程是否已经结束；空课表和无法解析的时间不触发切换。
+ * @param {Lesson[]} lessons
+ * @param {Date} date
+ * @param {number} timeOffset
+ * @returns {boolean}
+ */
+function hasLessonsEnded(lessons, date, timeOffset) {
+  const nowTime = date.getTime() - (Number(timeOffset) || 0) * 1000
+  const rex = /^(\d{1,2})[：:](\d{1,2})[-~ ]+(\d{1,2})[：:](\d{1,2})$/
+  let hasLesson = false
+  for (const lesson of lessons) {
+    if (lesson.isDivider) continue
+    hasLesson = true
+    const match = rex.exec(lesson.time)
+    if (!match) return false
+    const start = Number(match[1]) * 60 + Number(match[2])
+    const end = Number(match[3]) * 60 + Number(match[4])
+    if (start >= 1440 || end > 1440 || Number(match[2]) >= 60 || Number(match[4]) >= 60) {
+      return false
+    }
+    const endDate = new Date(date)
+    endDate.setHours(0, end, 0, 0)
+    // 跨午夜课程在次日结束，不能仅比较一天内的分钟数。
+    if (end <= start) endDate.setDate(endDate.getDate() + 1)
+    if (nowTime < endDate.getTime()) return false
+  }
+  return hasLesson
+}
+
+/**
+ * 获取主页课表：今日课程全部结束后预览明日，保留引擎的真实当前日期。
+ * @returns {{ date: Date, scheduleId: number, dayKey: Week, isTomorrow: boolean, lessons: Lesson[] }}
+ */
+function getHomeSchedule() {
+  const date = new Date()
+  refreshActiveState(date)
+  const todayLessons = getScheduleToday(engine.schedule, engine.currentScheduleId, engine.today, engine.scheduleOverride)
+  const isTomorrow = hasLessonsEnded(todayLessons, date, engine.setting.timeOffset)
+  if (isTomorrow) date.setDate(date.getDate() + 1)
+  const scheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length, date)
+  const dayKey = WEEKDAYS[date.getDay()]
+  const lessons = isTomorrow
+    ? getScheduleToday(engine.schedule, scheduleId, dayKey, null).map(lesson => ({ ...lesson, active: 0 }))
+    : todayLessons
+  return { date, scheduleId, dayKey, isTomorrow, lessons }
+}
+
+/**
  * 获取倒计时信息
  * @param {Lesson[]} lessons
  * @param {number} timeOffset
@@ -232,9 +280,13 @@ function getCountdownText(lessons, timeOffset) {
 
 /**
  * 刷新今日课程的高亮状态
+ * @param {Date} [date]
  * @returns {void}
  */
-function refreshActiveState() {
+function refreshActiveState(date) {
+  const now = date || new Date()
+  engine.today = WEEKDAYS[now.getDay()]
+  engine.currentScheduleId = getCurrentScheduleId(engine.firstWeekMonday, engine.schedule.length, now)
   const todayLessons = getScheduleToday(engine.schedule, engine.currentScheduleId, engine.today, engine.scheduleOverride)
   const scheduleDay = engine.schedule[engine.currentScheduleId]
   if (!scheduleDay || !scheduleDay[engine.today]) return
@@ -253,11 +305,12 @@ function refreshActiveState() {
  * 根据第一周周一日期计算当前应使用的课程表索引
  * @param {string} firstWeekMonday
  * @param {number} scheduleLength
+ * @param {Date} [date]
  * @returns {number}
  */
-function getCurrentScheduleId(firstWeekMonday, scheduleLength) {
+function getCurrentScheduleId(firstWeekMonday, scheduleLength, date) {
   if (!firstWeekMonday) return 0
-  const diff = getWeekDiff(new Date(), firstWeekMonday)
+  const diff = getWeekDiff(date || new Date(), firstWeekMonday)
   const len = Math.max(scheduleLength, 1)
   return ((diff % len) + len) % len
 }
@@ -704,6 +757,7 @@ export {
   setFirstWeek,
   csesToConfig,
   getScheduleToday,
+  getHomeSchedule,
   getCountdownInfo,
   getCountdownText,
   startTimers,
