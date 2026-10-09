@@ -40,11 +40,13 @@
               onclick="onLessonTap($idx)"
             >
               <div if="{{!$item.isDivider}}" class="lesson-content">
-                <marquee id="{{$item.marqueeId}}" class="lesson-name" scrollamount="{{20}}" loop="{{-1}}" text-offset="40">{{ $item.name }}</marquee>
+                <div class="lesson-header">
+                  <marquee id="{{$item.marqueeId}}" class="lesson-name" scrollamount="{{20}}" loop="{{-1}}" text-offset="40">{{ $item.name }}</marquee>
+                  <text if="{{$item.active === 2}}" class="badge-now">当前</text>
+                  <text elif="{{$item.active === 1}}" class="badge-next">下节</text>
+                </div>
                 <text class="lesson-time">{{ $item.time }}</text>
               </div>
-              <text if="{{!$item.isDivider && $item.active === 2}}" class="badge-now">当前</text>
-              <text elif="{{!$item.isDivider && $item.active === 1}}" class="badge-next">下节</text>
             </div>
           </div>
         </scroll>
@@ -207,14 +209,24 @@
   flex-basis: 0px;
 }
 
-.lesson-name {
+.lesson-header {
   width: 100%;
+  flex-direction: row;
+  align-items: center;
+}
+
+.lesson-name {
+  width: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0px;
   font-size: 22px;
   color: #ffffff;
   font-weight: bold;
 }
 
 .lesson-time {
+  width: 100%;
   font-size: 17px;
   color: #aaaaaa;
   margin-top: 2px;
